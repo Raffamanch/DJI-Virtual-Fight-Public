@@ -218,7 +218,7 @@
         scene.fog = new THREE.FogExp2(0xbcd6ff, 0.0018);
 
         // Pengaturan Kamera FOV 120
-        const camera = new THREE.PerspectiveCamera(109, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const camera = new THREE.PerspectiveCamera(150, window.innerWidth / window.innerHeight, 0.1, 2000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(renderer.domElement);
