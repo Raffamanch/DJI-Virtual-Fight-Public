@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FPV PC Simulator - Velocidrone Clean Day Track</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #a4caff; font-family: monospace; }
+        #canvas-container { width: 100%; height: 100%; position: relative; }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        /* OSD Canvas Overlay (Chroma Key) */
+        #osd-overlay-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 6; pointer-events: none;
+        }
+
+        /* Canvas Khusus Mikrofon (Bawah Tengah) */
+        #mic-canvas {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 10vh;
+            width: auto;
+            z-index: 6;
+            pointer-events: none;
+            image-rendering: pixelated;
+        }
+
+        /* RC Stick Controller Overlay (Bawah Tengah, Padding Bottom 20px, Auto Fit agar tidak block OSD) */
+        #rc-sticks-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 7;
+            pointer-events: none;
+        }
+        .stick-box {
+            width: 70px;
+            height: 70px;
+            background: rgba(40, 45, 55, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .stick-cross-h {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .stick-cross-v {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 1px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .stick-ball {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #ffffff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            transition: transform 0.05s linear;
+        }
+
+        /* Top Action Bar (Switch View, Retry, Pause matching reference video) */
+        #top-action-bar {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 8;
+            pointer-events: auto;
+        }
+        .top-btn {
+            background: rgba(20, 25, 35, 0.7);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .top-btn:hover {
+            background: rgba(40, 50, 70, 0.8);
+        }
+        .btn-icon {
+            background: #ffffff;
+            color: #111;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        /* MAIN MENU SCREEN */
+        #instructions { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.1); color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; z-index: 10; }
+        #menu-content { background: rgba(24, 34, 48, 0.95); padding: 30px 40px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { margin-bottom: 20px; font-size: 24px; letter-spacing: 1px; color: #ffeb3b; }
+        p { line-height: 1.8; font-size: 15px; color: #eee; }
+        
+        /* Menu Dot ESC & Leave for tutorial */
+        #top-menu-bar {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            display: flex;
+            align-items: center;
+            z-index: 8;
+            pointer-events: auto;
+        }
+        #menu-dot-esc {
+            color: #ffffff;
+            font-size: 14px;
+            background: rgba(20, 25, 35, 0.7);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.25);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container">
+        <!-- Top Left Menu Bar -->
+        <div id="top-menu-bar">
+            <div id="menu-dot-esc">NO &bull; 6/5</div>
+        </div>
+
+        <!-- Top Right Action Bar matching reference video -->
+        <div id="top-action-bar">
+            <button class="top-btn" id="btn-switch-view">Switch View <span class="btn-icon">C</span></button>
+            <button class="top-btn" id="btn-retry">Retry <span class="btn-icon">R</span></button>
+            <button class="top-btn" id="btn-pause">Pause <span class="btn-icon">ESC</span></button>
+        </div>
+
+        <!-- Canvas untuk Gambar OSD -->
+        <canvas id="osd-overlay-canvas"></canvas>
+        
+        <!-- Canvas untuk Mikrofon -->
+        <canvas id="mic-canvas"></canvas>
+
+        <!-- RC Stick Controller Overlay (Bawah Tengah) -->
+        <div id="rc-sticks-container">
+            <div class="stick-box">
+                <div class="stick-cross-h"></div>
+                <div class="stick-cross-v"></div>
+                <div id="stick-left" class="stick-ball"></div>
+            </div>
+            <div class="stick-box">
+                <div class="stick-cross-h"></div>
+                <div class="stick-cross-v"></div>
+                <div id="stick-right" class="stick-ball"></div>
+            </div>
+        </div>
+
+        <div id="instructions">
+            <div id="menu-content">
+                <h1>VelociDrone</h1>
+                <p>
+                    <b>[ W / S ]</b> : THROTTLE | <b>[ A / D ]</b> : YAW<br>
+                    <b>[ Move Mouse ]</b> : PITCH & ROLL | <b>[ R ]</b> : Reset Drone<br><br>
+                    <b>[ C ]</b> : Toggle FPV / TPV View | <b>[ 1, 2, 3, 4 ]</b> : Switch Flight Mode<br><br>
+                    <span style="color: #00ffcc;">✓ FOV 120 | TPV - FPV View |  Effect Cloud Move & Tumble Crash Max!</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA OSD CHROMA KEY (LAMA) ---
+        const osdCanvas = document.getElementById('osd-overlay-canvas');
+        const oCtx = osdCanvas.getContext('2d');
+        const osdImg = new Image();
+        osdImg.src = 'hd.jpeg';
+        osdImg.onload = () => {
+            osdCanvas.width = window.innerWidth; osdCanvas.height = window.innerHeight;
+            oCtx.drawImage(osdImg, 0, 0, osdCanvas.width, osdCanvas.height);
+            const frame = oCtx.getImageData(0, 0, osdCanvas.width, osdCanvas.height);
+            for (let i = 0; i < frame.data.length; i += 4) {
+                // Menghapus latar hitam gambar (Chroma Key)
+                if (frame.data[i] < 50 && frame.data[i+1] < 50 && frame.data[i+2] < 50) {
+                    frame.data[i + 3] = 0;
+                }
+            }
+            oCtx.putImageData(frame, 0, 0);
+        };
+
+        const container = document.getElementById('canvas-container');
+        const inst = document.getElementById('instructions');
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xa4caff); // Warna dasar langit siang
+        scene.fog = new THREE.FogExp2(0xbcd6ff, 0.0018);
+
+        // Pengaturan Kamera FOV 120
+        const camera = new THREE.PerspectiveCamera(109, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        // Pencahayaan Luar Ruangan Cerah Tanpa Bayangan Tajam Kaku
+        scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+        const skyLight = new THREE.DirectionalLight(0xfffae0, 0.6);
+        skyLight.position.set(100, 300, 50);
+        scene.add(skyLight);
+
+        // --- GENERATOR TEKSTUR MATRIKS ---
+        // 1. Tekstur Rumput Lapangan Balap
+        const floorCanvas = document.createElement('canvas');
+        floorCanvas.width = 256; floorCanvas.height = 256;
+        const ctxFloor = floorCanvas.getContext('2d');
+        ctxFloor.fillStyle = '#4d7c3d'; ctxFloor.fillRect(0, 0, 256, 256);
+        for(let i=0; i<800; i++) {
+            ctxFloor.fillStyle = i % 2 === 0 ? '#568a44' : '#457037';
+            ctxFloor.fillRect(Math.random()*256, Math.random()*256, 3, 3);
+        }
+        const floorTex = new THREE.CanvasTexture(floorCanvas);
+        floorTex.wrapS = THREE.RepeatWrapping; floorTex.wrapT = THREE.RepeatWrapping;
+        floorTex.repeat.set(180, 180);
+
+        const floorGeo = new THREE.PlaneGeometry(5000, 5000);
+        floorGeo.rotateX(-Math.PI / 2);
+        const floorMat = new THREE.MeshBasicMaterial({ map: floorTex });
+        scene.add(new THREE.Mesh(floorGeo, floorMat));
+
+        // 2. Tekstur Awan di Langit
+        const cloudGroup = new THREE.Group();
+        const cloudCanvas = document.createElement('canvas');
+        cloudCanvas.width = 128; cloudCanvas.height = 128;
+        const ctxCloud = cloudCanvas.getContext('2d');
+        let grad = ctxCloud.createRadialGradient(64,64,10, 64,64,55);
+        grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+        grad.addColorStop(0.4, 'rgba(240,245,255,0.6)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctxCloud.fillStyle = grad; ctxCloud.fillRect(0,0,128,128);
+        const cloudTex = new THREE.CanvasTexture(cloudCanvas);
+
+        const cloudSpriteMat = new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: 0.6 });
+        for(let c=0; c<45; c++) {
+            const sprite = new THREE.Sprite(cloudSpriteMat);
+            sprite.position.set((Math.random()-0.5)*1200, 180 + Math.random()*70, (Math.random()-0.5)*1200);
+            sprite.scale.set(120 + Math.random()*100, 50 + Math.random()*40, 1);
+            cloudGroup.add(sprite);
+        }
+        scene.add(cloudGroup);
+
+        // 3. Tekstur Halus untuk Obstacle & Gedung
+        const blockCanvas = document.createElement('canvas');
+        blockCanvas.width = 64; blockCanvas.height = 64;
+        const ctxBlock = blockCanvas.getContext('2d');
+        ctxBlock.fillStyle = '#6e7a8a'; ctxBlock.fillRect(0,0,64,64);
+        ctxBlock.fillStyle = '#7a8899'; ctxBlock.fillRect(2,2,60,60);
+        const blockTex = new THREE.CanvasTexture(blockCanvas);
+        blockTex.wrapS = THREE.RepeatWrapping; blockTex.wrapT = THREE.RepeatWrapping;
+        blockTex.repeat.set(2, 8);
+
+        // --- MAP OBSTACLES BALAPAN ---
+        const obstacles = [];
+        const wallMat = new THREE.MeshBasicMaterial({ map: blockTex });
+        const gateMat = new THREE.MeshBasicMaterial({ color: 0xff1144 });
+
+        function createTrackTower(x, z, width, height, depth) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), wallMat);
+            mesh.position.set(x, height / 2, z);
+            scene.add(mesh);
+            obstacles.push({ minX: x - width/2, maxX: x + width/2, minZ: z - depth/2, maxZ: z + depth/2, minY: 0, maxY: height });
+        }
+
+        function createVelociGate(x, z, rotY) {
+            const gateGroup = new THREE.Group(); const gateW = 15, gateH = 11, thick = 0.7;
+            const top = new THREE.Mesh(new THREE.BoxGeometry(gateW, thick, thick), gateMat); top.position.y = gateH;
+            const left = new THREE.Mesh(new THREE.BoxGeometry(thick, gateH, thick), gateMat); left.position.set(-gateW/2, gateH/2, 0);
+            const right = new THREE.Mesh(new THREE.BoxGeometry(thick, gateH, thick), gateMat); right.position.set(gateW/2, gateH/2, 0);
+            gateGroup.add(top, left, right); gateGroup.position.set(x, 0, z); gateGroup.rotation.y = rotY; scene.add(gateGroup);
+
+            const isRotated = Math.abs(rotY) > 0.1; const sizeX = isRotated ? thick : gateW; const sizeZ = isRotated ? gateW : thick;
+            const lx = x + (isRotated ? 0 : -gateW/2); const lz = z + (isRotated ? -gateW/2 : 0);
+            obstacles.push({ minX: lx - 0.5, maxX: lx + 0.5, minZ: lz - 0.5, maxZ: lz + 0.5, minY: 0, maxY: gateH });
+            const rx = x + (isRotated ? 0 : gateW/2); const rz = z + (isRotated ? gateW/2 : 0);
+            obstacles.push({ minX: rx - 0.5, maxX: rx + 0.5, minZ: rz - 0.5, maxZ: rz + 0.5, minY: 0, maxY: gateH });
+            obstacles.push({ minX: x - sizeX/2, maxX: x + sizeX/2, minZ: z - sizeZ/2, maxZ: z + sizeZ/2, minY: gateH - 0.4, maxY: gateH + 0.4 });
+        }
+
+        // Penataan Layout Track Lapangan Terbuka
+        createTrackTower(-60, -100, 30, 70, 30);
+        createTrackTower(70, -120, 35, 90, 35);
+        createTrackTower(-90, 20, 25, 55, 25);
+        createTrackTower(80, 40, 30, 65, 30);
+
+        // Distribusi Seri Gerbang Balap Air-Gate
+        createVelociGate(0, -20, 0);
+        createVelociGate(-35, -60, Math.PI / 4);
+        createVelociGate(35, -60, -Math.PI / 4);
+        createVelociGate(0, -120, 0);
+        createVelociGate(-50, -170, Math.PI / 2);
+        createVelociGate(50, -170, Math.PI / 2);
+        createVelociGate(0, -240, 0);
+
+        // --- 3D DRONE MODEL ---
+        const droneGroup = new THREE.Group();
+        const coreGeo = new THREE.BoxGeometry(1.2, 0.4, 1.8);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+        droneGroup.add(new THREE.Mesh(coreGeo, coreMat));
+
+        const armMat = new THREE.MeshBasicMaterial({ color: 0x444444 });
+        const arm1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 3.2), armMat); arm1.rotation.y = Math.PI / 4;
+        const arm2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 3.2), armMat); arm2.rotation.y = -Math.PI / 4;
+        droneGroup.add(arm1, arm2);
+
+        const propMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+        const offsets = [{x:1.1, z:1.1}, {x:-1.1, z:1.1}, {x:1.1, z:-1.1}, {x:-1.1, z:-1.1}];
+        const propMeshes = [];
+
+        offsets.forEach(pos => {
+            const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.3), armMat); motor.position.set(pos.x, 0.2, pos.z);
+            const prop = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.02, 0.15), propMat); prop.position.set(pos.x, 0.35, pos.z);
+            droneGroup.add(motor, prop); propMeshes.push(prop);
+        });
+        scene.add(droneGroup);
+
+        // --- DRONE PHYSICS ---
+        const drone = {
+            position: new THREE.Vector3(0, 0.3, 45), 
+            velocity: new THREE.Vector3(0, 0, 0),
+            rotation: new THREE.Quaternion(),
+            euler: new THREE.Euler(0, 0, 0, 'YXZ')
+        };
+
+        const MODES = {
+            1: { name: "NORMAL", maxThrust: 14.0, drag: 0.040, hasAutoLevel: true, maxAngle: 0.5 },
+            2: { name: "SPORT",  maxThrust: 21.0, drag: 0.025, hasAutoLevel: true, maxAngle: 0.8 },
+            3: { name: "MANUAL", maxThrust: 25.5, drag: 0.022, hasAutoLevel: false },
+            4: { name: "ACRO",   maxThrust: 25.5, drag: 0.009, hasAutoLevel: false }
+        };
+        let activeMode = 1;
+        let cameraMode = "FPV";
+
+        let tumbleRotationVelocity = new THREE.Vector3(0, 0, 0);
+        let isSpawnedSafe = true; 
+
+        let keys = { w: false, s: false, a: false, d: false };
+        let mouseRoll = 0, mousePitch = 0;
+        let rawMouseX = 0, rawMouseY = 0;
+
+        const MOUSE_SENSITIVITY = 0.0025; 
+        const THROTTLE_SPEED = 4.0;
+        const YAW_RATE = 3.5;
+        const GRAVITY = 9.81;
+        const CAMERA_UPTILT = 28 * (Math.PI / 180);
+
+        let currentThrottle = 0;
+
+        // --- LISTENERS ---
+        container.addEventListener('click', () => { container.requestPointerLock(); });
+        inst.addEventListener('click', () => { container.requestPointerLock(); });
+        document.addEventListener('pointerlockchange', () => { 
+            const isLocked = (document.pointerLockElement === container);
+            inst.style.display = isLocked ? 'none' : 'flex';
+            if (!isLocked) {
+                rawMouseX = 0;
+                rawMouseY = 0;
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (['1','2','3','4'].includes(e.key)) {
+                activeMode = parseInt(e.key);
+                return;
+            }
+            if (e.key.toLowerCase() === 'c') {
+                cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV";
+                return;
+            }
+            const key = e.key.toLowerCase();
+            if (key in keys) keys[key] = true;
+            if (key === 'r') resetDrone();
+        });
+        document.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement !== container) return;
+            mouseRoll = e.movementX * MOUSE_SENSITIVITY;
+            mousePitch = -e.movementY * MOUSE_SENSITIVITY;
+            
+            rawMouseX += e.movementX * 0.4;
+            rawMouseY += e.movementY * 0.4;
+            rawMouseX = Math.max(-25, Math.min(25, rawMouseX));
+            rawMouseY = Math.max(-25, Math.min(25, rawMouseY));
+        });
+
+        // UI button event bindings
+        document.getElementById('btn-switch-view').addEventListener('click', (e) => {
+            e.stopPropagation();
+            cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV";
+        });
+        document.getElementById('btn-retry').addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetDrone();
+        });
+        document.getElementById('btn-pause').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.exitPointerLock();
+            inst.style.display = 'flex';
+        });
+
+        function resetDrone() {
+            drone.position.set(0, 0.3, 45); drone.velocity.set(0, 0, 0); drone.rotation.set(0, 0, 0, 1); drone.euler.set(0, 0, 0);
+            currentThrottle = 0; tumbleRotationVelocity.set(0, 0, 0);
+            isSpawnedSafe = true; 
+            rawMouseX = 0; rawMouseY = 0;
+        }
+
+        // --- TUMBLE & BOUNCE PHYSICS ---
+        function handleCollisions() {
+            const px = drone.position.x; const py = drone.position.y; const pz = drone.position.z; 
+            const buffer = 0.8; 
+
+            for(let i = 0; i < obstacles.length; i++) {
+                const obs = obstacles[i];
+                if(px + buffer > obs.minX && px - buffer < obs.maxX && pz + buffer > obs.minZ && pz - buffer < obs.maxZ) {
+                    if(py + buffer > obs.minY && py - buffer < obs.maxY) {
+                        
+                        let overlapX = Math.min(obs.maxX - (px - buffer), (px + buffer) - obs.minX);
+                        let overlapZ = Math.min(obs.maxZ - (pz - buffer), 
