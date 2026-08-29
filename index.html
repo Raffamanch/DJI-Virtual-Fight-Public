@@ -8,7 +8,10 @@
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Raffamanch/DJI-Virtual-Fight/main/PNG.ico">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #a4caff; font-family: consolas; position: fixed; }
+        body, html {
+            width: 100%; height: 100%; overflow: hidden; background: #a4caff; font-family: consolas; position: fixed;
+            cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAgCAYAAAD9oDOIAAADCUlEQVR4nK3WP0gbURwH8O+7e1dK20VB49C1Q8AQJEM6RQgOYnGwDoKIFa1BCwWVYsVBKBSUFtJSCtLSDh3F0cGhg5uTaym0dKpDLFiow3m5e+99O/hOL5qIRn/whku4z/3e7/0FgM+O4wCAsO3qIYQggFULu9cC53I5NTs7SwDvpZTXA3d1dZFkND09TQDvrgXOZDI0xpBkVCqVCKB8ZTibzdIYQ621IRlNTEwQwOsrwdlsliRjmCTV2NgYASxbWF4ajtEEbEhGIyMjBPCyKTiJkoyzNSSj4eFhAniRKEVzaJyxhdXQ0BABLF0q43roKTgaHBwkgMULw43QZCmUUmpgYIAAnnueF8PNoUk4DEPV399PAM8SGTeHJuEoilRfXx8BzJwLXwRNwoeHh7q3t5cAnjaEL4qeglVPTw8BPKkLXwZNwr7vq2KxSAClM/BFUWNMPM2olCJJc3BwoAuFAgE8dl33BL5kpoakTjTl+35UKBQ0gEfHG32jFWW7eRy+7zMIgprm+z7DMGSlUmE+n6fjOBOO45wdOZIQQkAIYQA49pmTk5Nia2vrj5Qy0FoDAAHAGAPP8xgEAYwxi67r/q7JNM4uDEPOz89zf38/rqNaW1sjgFX77XipOokWP986vZ8arbWxu9Ov9fV18miZmiAImE6n/7a3t6eklHFvalrN6Cc3j9HRUQJYaG1tTReLRcWjJUqSanl5mQDmaka6XmQymbjb0fj4OAG88jwPQghIKb/u7OwYkoqk3t3dZUtLyzcAN0g2vifEp+nU1BQBvLETOX7pYalUIkldrVYNSW2Pmgfnbty5XC6am5s7fe47tkY329raflQqFdp5GW1vb1MIsWHnpFMXtTeUT3VuKNLWbqFcLpOkiqLIaK1NPp8PAKTt/3Xhjw3uUo79/W5nZ+e/arXKIAgMyXBjY0MJId4mEmkY9Yru2he/bG5uGpLh3t4eV1ZW6Lruz1QqdbtOMsdYozPHJSmklPe7u7s5MzPDjo6O7wCWANzDyaRvKhwAHwCUANyx2TeM/5Wfw+XZZOOkAAAAAElFTkSuQmCC') 0 0, auto;
+        }
         #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
         
@@ -145,6 +148,24 @@
         }
 
         #instructions { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; z-index: 20; }
+
+        /* Fake cursor: the real OS cursor is force-hidden by the browser during
+           Pointer Lock, so we draw our own cursor icon fixed at the center of
+           the screen instead. It stays put - it does NOT track mouse movement -
+           all mouse movement while locked is used purely to fly the drone. */
+        #fake-cursor {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 24px;
+            /* Hotspot is at the tip (top-left corner), so no centering transform. */
+            transform: translate(0, 0);
+            pointer-events: none;
+            z-index: 25;
+            display: none;
+        }
+        #fake-cursor img { width: 100%; height: 100%; display: block; }
         #menu-content { background: rgba(24, 34, 48, 0.95); padding: 25px 30px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); pointer-events: auto; max-width: 90%; }
         h1 { margin-bottom: 15px; font-size: 22px; letter-spacing: 1px; color: #ffeb3b; }
         p { font-size: 14px; color: #eee; }
@@ -166,6 +187,12 @@
 
         <div id="osd-container">
             <canvas id="osd-overlay-canvas"></canvas>
+        </div>
+
+        <!-- Fake cursor shown while pointer is locked (the real OS cursor is force-hidden
+             by the browser during Pointer Lock). Uses the user's actual Windows cursor image. -->
+        <div id="fake-cursor">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAABLCAYAAAAyEtS4AAADc0lEQVR4nN3YzUtUURjH8S9htxeyFEVGRF25cScIAwWD0MK/YEBQisBA+w9E0CBaVFtbuFM3EhlBEEYQFRJj+Zb4gijqRmbjKlcOBk8LPXYbbe7L3HPPuT7gQrjnOc/H4/3N3AvwDbjJBSjhgmCEC4IRLghGAGlqako8RgDZ3d1NPEYAEZHEY04hCtPc3JxIzD+QJGPOQJKKOReSRMx/IUnDlIQkCeMJSQrGFyQJGN8Q2zGBIDZjAkNsxYSC2IgJDbENUxbEJkzZEFswkUBswEQGMY2JFGISEznEFEYLxARGGyRujFZInBjtkLgwsUDiwMQG0Y2JFaITEztEF8YIRAfGGCRqjFFIlBjjkKgwVkBEysdYAxEpD2MVRCQ8xjqISDiMlRCR4BhrISLBMFZDRPxjrIeI+MMkAiLijdEKSafTamMdP6eYS/+7caKq/v5+ne1vA9OcYEKfyOzsrOTz+ZLXFAoFSaVS6i/YoUsU+kTm5ubo7OxkdHS05HWO49Db26t+1Xo8gU9kfn5eqqqqBJBUKiWFQqHk9fl8XhzHEeAIaLICsrCwINXV1epf5TcgExMTnuu6urrUmqfGIUtLS1JTU6MGmgIeAZJOpz3X5nI5tW4fuGYMsry87Ea8BZyTgfYByeVynj3a29vV+gdGICsrK1JbW6uGeHeCUPUCkJ6eHk/I2NiY6rEYO2Rtbc2NeF+EgOOb98hxHF9RXFdXp3plYoOsr6+7N54+B6HqDSDDw8OepzI4OKj6vYoFsrGx4f4g+wBcLdGjAwui+Axkc3NT6uvrFeIjcN1Hn5+AjI+Pe55KNptVvZ9og2xtbUlDQ4Pa6JNPBMBDDEfxKWR7e9uN+BIAAQGjuK2tTe1zP1LIzs6ONDY2quZfAyJUPQeku7vbE6IjigVwP7DMADdC9vIdxYeHh+4P2DuRQfj7oFJZZr8pQIaGhjxPJeooVs1ywK0I+nXgM4r39vakoqJCRXFDuRsL8INoEKqWMBDFc0SLgABRPDMz447iK+VsWh3F5EUVKIpbWloU5p6GWcquZ5SI4oODAxkZGZHW1lZ32Hw3O/L5dW4Ur66uSl9fn1RWVroBeeAxEdzwuuo1IAMDAzI5OSmZTKb4vdRnIAtcNjijr+rg7Eu1X8BLoNXcWOFqkWPACsevg8J+azBed9HwNFhcfwAsklzWs7p8EAAAAABJRU5ErkJggg==" alt="" />
         </div>
 
         <!-- Bottom Center HUD: Motor Toggle Logo & Fullscreen Logo -->
@@ -512,8 +539,6 @@
         const CAMERA_UPTILT = 30 * (Math.PI / 180);
         let currentThrottle = 0;
 
-        let mouseControlActive = false;
-
         const motorBtn = document.getElementById('btn-motor-toggle');
         function toggleMotors() {
             if (!isArmed) {
@@ -555,10 +580,27 @@
         function startGameSession() {
             handleResize();
             inst.style.display = 'none';
-            mouseControlActive = true;
+            if (!isMobile) {
+                container.requestPointerLock();
+            }
         }
         container.addEventListener('click', startGameSession);
         inst.addEventListener('click', startGameSession);
+
+        const fakeCursor = document.getElementById('fake-cursor');
+
+        document.addEventListener('pointerlockchange', () => { 
+            if (!isMobile) {
+                const isLocked = (document.pointerLockElement === container);
+                inst.style.display = isLocked ? 'none' : 'flex';
+                if (!isLocked) { rawMouseX = 0; rawMouseY = 0; }
+                // Browsers force-hide the real OS cursor while pointer-locked.
+                // Show our own fixed, centered cursor icon instead so a cursor
+                // is always visible - it never moves, since mouse movement is
+                // fully dedicated to flying the drone.
+                fakeCursor.style.display = isLocked ? 'block' : 'none';
+            }
+        });
 
         document.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'm') {
@@ -576,11 +618,8 @@
             if (key === 'r') resetDrone();
         });
         document.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
-        
-        // FIXED MOUSE LOGIC: Uses natural delta movement while cursor moves normally and stays visible
         document.addEventListener('mousemove', (e) => {
-            if (isMobile || !mouseControlActive) return;
-
+            if (isMobile || document.pointerLockElement !== container) return;
             mousePitch = -e.movementY * MOUSE_SENSITIVITY;
             mouseRoll = e.movementX * MOUSE_SENSITIVITY;
             
@@ -688,7 +727,7 @@
         });
         document.getElementById('btn-pause').addEventListener('click', (e) => {
             e.stopPropagation();
-            mouseControlActive = false;
+            if (!isMobile) document.exitPointerLock();
             inst.style.display = 'flex';
         });
 
@@ -782,7 +821,7 @@
                     drone.rotation.multiply(deltaRotation).normalize();
                 }
             } else {
-                if (mouseControlActive) {
+                if (document.pointerLockElement === container) {
                     if (keys.a) inputYaw = -YAW_RATE * dt;
                     if (keys.d) inputYaw = YAW_RATE * dt;
 
@@ -828,6 +867,7 @@
             drone.velocity.addScaledVector(accel, dt);
             drone.position.addScaledVector(drone.velocity, dt);
 
+            // FIXED LANDING: Snaps cleanly to ground and zeroes vertical velocity/tumble to prevent double jumping/bouncing
             if (drone.position.y <= 0.3) {
                 drone.position.y = 0.3; 
                 drone.velocity.y = 0;
@@ -873,6 +913,7 @@
                 camera.lookAt(drone.position);
             }
 
+            // FIXED CAMERA CRASH: Enforce a minimum camera height floor offset to prevent it from clipping through the terrain
             if (camera.position.y < 0.5) {
                 camera.position.y = 0.5;
             }
@@ -899,7 +940,7 @@
             stickLeft.style.transform = `translate(calc(-50% + ${leftX}px), calc(-50% + ${leftY}px))`;
             stickRight.style.transform = `translate(calc(-50% + ${rightX}px), calc(-50% + ${rightY}px))`;
 
-            renderer.render(scene, camera);
+            renderer.format = renderer.render(scene, camera);
         }
 
         animate();
