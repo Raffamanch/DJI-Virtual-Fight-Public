@@ -8,11 +8,8 @@
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Raffamanch/DJI-Virtual-Fight/main/PNG.ico">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-        body, html {
-            width: 100%; height: 100%; overflow: hidden; background: #a4caff; font-family: consolas; position: fixed;
-            cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAgCAYAAAD9oDOIAAADCUlEQVR4nK3WP0gbURwH8O+7e1dK20VB49C1Q8AQJEM6RQgOYnGwDoKIFa1BCwWVYsVBKBSUFtJSCtLSDh3F0cGhg5uTaym0dKpDLFiow3m5e+99O/hOL5qIRn/whku4z/3e7/0FgM+O4wCAsO3qIYQggFULu9cC53I5NTs7SwDvpZTXA3d1dZFkND09TQDvrgXOZDI0xpBkVCqVCKB8ZTibzdIYQ621IRlNTEwQwOsrwdlsliRjmCTV2NgYASxbWF4ajtEEbEhGIyMjBPCyKTiJkoyzNSSj4eFhAniRKEVzaJyxhdXQ0BABLF0q43roKTgaHBwkgMULw43QZCmUUmpgYIAAnnueF8PNoUk4DEPV399PAM8SGTeHJuEoilRfXx8BzJwLXwRNwoeHh7q3t5cAnjaEL4qeglVPTw8BPKkLXwZNwr7vq2KxSAClM/BFUWNMPM2olCJJc3BwoAuFAgE8dl33BL5kpoakTjTl+35UKBQ0gEfHG32jFWW7eRy+7zMIgprm+z7DMGSlUmE+n6fjOBOO45wdOZIQQkAIYQA49pmTk5Nia2vrj5Qy0FoDAAHAGAPP8xgEAYwxi67r/q7JNM4uDEPOz89zf38/rqNaW1sjgFX77XipOokWP986vZ8arbWxu9Ov9fV18miZmiAImE6n/7a3t6eklHFvalrN6Cc3j9HRUQJYaG1tTReLRcWjJUqSanl5mQDmaka6XmQymbjb0fj4OAG88jwPQghIKb/u7OwYkoqk3t3dZUtLyzcAN0g2vifEp+nU1BQBvLETOX7pYalUIkldrVYNSW2Pmgfnbty5XC6am5s7fe47tkY329raflQqFdp5GW1vb1MIsWHnpFMXtTeUT3VuKNLWbqFcLpOkiqLIaK1NPp8PAKTt/3Xhjw3uUo79/W5nZ+e/arXKIAgMyXBjY0MJId4mEmkY9Yru2he/bG5uGpLh3t4eV1ZW6Lruz1QqdbtOMsdYozPHJSmklPe7u7s5MzPDjo6O7wCWANzDyaRvKhwAHwCUANyx2TeM/5Wfw+XZZOOkAAAAAElFTkSuQmCC') 0 0, auto;
-        }
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow: hidden; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #a4caff; font-family: consolas; position: fixed; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow: hidden; cursor: default; }
         canvas { width: 100%; height: 100%; display: block; }
         
         #osd-container {
@@ -70,24 +67,29 @@
             pointer-events: none;
         }
         .stick-box {
-            width: 82px;
-            height: 82px;
-            background: rgba(40, 45, 55, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.28);
-            border-radius: 9px;
+            width: 110px;
+            height: 110px;
+            background: rgba(25, 28, 35, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
             position: relative;
-            box-shadow: 0 5px 12px rgba(0,0,0,0.33);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            overflow: hidden;
         }
         .stick-cross-h {
-            position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(255, 255, 255, 0.3);
+            position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255, 255, 255, 0.25);
         }
         .stick-cross-v {
-            position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(255, 255, 255, 0.3);
+            position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255, 255, 255, 0.25);
         }
         .stick-ball {
-            position: absolute; width: 16px; height: 16px; background: #ffffff; border-radius: 50%;
+            position: absolute; width: 18px; height: 18px; background: #ffffff; border-radius: 50%;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: transform 0.05s linear;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6); z-index: 3;
+        }
+        .stick-trail {
+            position: absolute; width: 14px; height: 14px; background: rgba(135, 206, 250, 0.65); border-radius: 50%;
+            transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
         }
 
         #touch-controls {
@@ -140,7 +142,6 @@
         .btn-icon { background: #ffffff; color: #111; font-size: 11px; font-weight: bold; padding: 1px 5px; border-radius: 4px; }
 
         #top-menu-bar { position: absolute; top: max(15px, env(safe-area-inset-top)); left: 20px; display: flex; align-items: center; gap: 10px; z-index: 8; pointer-events: auto; }
-        #menu-dot-esc { color: #ffffff; font-size: 14px; background: rgba(20, 25, 35, 0.7); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
         
         #mobile-mode-btn {
             color: rgb(255, 235, 59); font-size: 14px; background: rgba(20, 25, 35, 0.85); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,235,59,0.4); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
@@ -148,27 +149,9 @@
         }
 
         #instructions { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; z-index: 20; }
-
-        /* Fake cursor: the real OS cursor is force-hidden by the browser during
-           Pointer Lock, so we draw our own cursor icon fixed at the center of
-           the screen instead. It stays put - it does NOT track mouse movement -
-           all mouse movement while locked is used purely to fly the drone. */
-        #fake-cursor {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 16px;
-            height: 24px;
-            /* Hotspot is at the tip (top-left corner), so no centering transform. */
-            transform: translate(0, 0);
-            pointer-events: none;
-            z-index: 25;
-            display: none;
-        }
-        #fake-cursor img { width: 100%; height: 100%; display: block; }
         #menu-content { background: rgba(24, 34, 48, 0.95); padding: 25px 30px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); pointer-events: auto; max-width: 90%; }
         h1 { margin-bottom: 15px; font-size: 22px; letter-spacing: 1px; color: #ffeb3b; }
-        p { font-size: 14px; color: #eee; }
+        p { font-size: 14px; color: #eee; line-height: 1.5; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -189,12 +172,6 @@
             <canvas id="osd-overlay-canvas"></canvas>
         </div>
 
-        <!-- Fake cursor shown while pointer is locked (the real OS cursor is force-hidden
-             by the browser during Pointer Lock). Uses the user's actual Windows cursor image. -->
-        <div id="fake-cursor">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAABLCAYAAAAyEtS4AAADc0lEQVR4nN3YzUtUURjH8S9htxeyFEVGRF25cScIAwWD0MK/YEBQisBA+w9E0CBaVFtbuFM3EhlBEEYQFRJj+Zb4gijqRmbjKlcOBk8LPXYbbe7L3HPPuT7gQrjnOc/H4/3N3AvwDbjJBSjhgmCEC4IRLghGAGlqako8RgDZ3d1NPEYAEZHEY04hCtPc3JxIzD+QJGPOQJKKOReSRMx/IUnDlIQkCeMJSQrGFyQJGN8Q2zGBIDZjAkNsxYSC2IgJDbENUxbEJkzZEFswkUBswEQGMY2JFGISEznEFEYLxARGGyRujFZInBjtkLgwsUDiwMQG0Y2JFaITEztEF8YIRAfGGCRqjFFIlBjjkKgwVkBEysdYAxEpD2MVRCQ8xjqISDiMlRCR4BhrISLBMFZDRPxjrIeI+MMkAiLijdEKSafTamMdP6eYS/+7caKq/v5+ne1vA9OcYEKfyOzsrOTz+ZLXFAoFSaVS6i/YoUsU+kTm5ubo7OxkdHS05HWO49Db26t+1Xo8gU9kfn5eqqqqBJBUKiWFQqHk9fl8XhzHEeAIaLICsrCwINXV1epf5TcgExMTnuu6urrUmqfGIUtLS1JTU6MGmgIeAZJOpz3X5nI5tW4fuGYMsry87Ea8BZyTgfYByeVynj3a29vV+gdGICsrK1JbW6uGeHeCUPUCkJ6eHk/I2NiY6rEYO2Rtbc2NeF+EgOOb98hxHF9RXFdXp3plYoOsr6+7N54+B6HqDSDDw8OepzI4OKj6vYoFsrGx4f4g+wBcLdGjAwui+Axkc3NT6uvrFeIjcN1Hn5+AjI+Pe55KNptVvZ9og2xtbUlDQ4Pa6JNPBMBDDEfxKWR7e9uN+BIAAQGjuK2tTe1zP1LIzs6ONDY2quZfAyJUPQeku7vbE6IjigVwP7DMADdC9vIdxYeHh+4P2DuRQfj7oFJZZr8pQIaGhjxPJeooVs1ywK0I+nXgM4r39vakoqJCRXFDuRsL8INoEKqWMBDFc0SLgABRPDMz447iK+VsWh3F5EUVKIpbWloU5p6GWcquZ5SI4oODAxkZGZHW1lZ32Hw3O/L5dW4Ur66uSl9fn1RWVroBeeAxEdzwuuo1IAMDAzI5OSmZTKb4vdRnIAtcNjijr+rg7Eu1X8BLoNXcWOFqkWPACsevg8J+azBed9HwNFhcfwAsklzWs7p8EAAAAABJRU5ErkJggg==" alt="" />
-        </div>
-
         <!-- Bottom Center HUD: Motor Toggle Logo & Fullscreen Logo -->
         <div id="bottom-hud-bar">
             <button id="btn-motor-toggle" class="hud-control-btn" title="Toggle Motor">&#9881;</button>
@@ -202,12 +179,12 @@
         </div>
 
         <div id="rc-sticks-container">
-            <div class="stick-box">
+            <div id="stick-box-left" class="stick-box">
                 <div class="stick-cross-h"></div>
                 <div class="stick-cross-v"></div>
                 <div id="stick-left" class="stick-ball"></div>
             </div>
-            <div class="stick-box">
+            <div id="stick-box-right" class="stick-box">
                 <div class="stick-cross-h"></div>
                 <div class="stick-cross-v"></div>
                 <div id="stick-right" class="stick-ball"></div>
@@ -227,7 +204,13 @@
             <div id="menu-content">
                 <h1>DJI VIRTUAL FIGHT</h1>
                 <p id="instruction-text">
-                    <b>Ready to Go</b><br><br>                   
+                    <b>Click Anywhere to Start</b><br><br>
+                    <b>Controls:</b><br>
+                    • W / S: Throttle Up / Down<br>
+                    • A / D: Yaw Left / Right<br>
+                    • Mouse Move: Pitch & Roll (Cursor stays free at bottom)<br>
+                    • M: Toggle Motors | 1-4: Change Flight Modes<br>
+                    • C: Change View | R: Reset | ESC: Pause
                 </p>
             </div>
         </div>
@@ -241,7 +224,10 @@
             document.getElementById('mobile-mode-btn').style.display = 'block';
             document.getElementById('pause-icon').innerText = 'II';
             document.getElementById('instruction-text').innerHTML = `
-                <b>Ready to Go</b><br><br>
+                <b>Tap Anywhere to Start</b><br><br>
+                • Left Joystick: Throttle & Yaw<br>
+                • Right Joystick: Pitch & Roll<br>
+                • Tap Mode Button to switch flight modes
             `;
         }
 
@@ -523,21 +509,31 @@
         let isSpawnedSafe = true; 
 
         let keys = { w: false, s: false, a: false, d: false };
-        let mousePitch = 0, mouseRoll = 0;
-        let rawMouseX = 0, rawMouseY = 0;
+        
+        let targetMousePitch = 0;
+        let targetMouseRoll = 0;
+        let visualMouseX = 0;
+        let visualMouseY = 0;
 
         let touchLeftValX = 0, touchLeftValY = 1.0; 
         let touchRightValX = 0, touchRightValY = 0;
 
         let stickyThrottleValue = 0.0; 
 
-        const MOUSE_SENSITIVITY = 0.0025; 
+        const MOUSE_SENSITIVITY_SCALE = 0.8; 
         const THROTTLE_CHANGE_SPEED = 0.8; 
         const YAW_RATE = 3.5;
         const GRAVITY = 9.81;
         
         const CAMERA_UPTILT = 30 * (Math.PI / 180);
         let currentThrottle = 0;
+
+        let mouseControlActive = false;
+
+        // Stick trail history buffers
+        const leftTrailHistory = [];
+        const rightTrailHistory = [];
+        const MAX_TRAIL_POINTS = 6;
 
         const motorBtn = document.getElementById('btn-motor-toggle');
         function toggleMotors() {
@@ -580,29 +576,18 @@
         function startGameSession() {
             handleResize();
             inst.style.display = 'none';
-            if (!isMobile) {
-                container.requestPointerLock();
-            }
+            mouseControlActive = true;
         }
         container.addEventListener('click', startGameSession);
         inst.addEventListener('click', startGameSession);
 
-        const fakeCursor = document.getElementById('fake-cursor');
-
-        document.addEventListener('pointerlockchange', () => { 
-            if (!isMobile) {
-                const isLocked = (document.pointerLockElement === container);
-                inst.style.display = isLocked ? 'none' : 'flex';
-                if (!isLocked) { rawMouseX = 0; rawMouseY = 0; }
-                // Browsers force-hide the real OS cursor while pointer-locked.
-                // Show our own fixed, centered cursor icon instead so a cursor
-                // is always visible - it never moves, since mouse movement is
-                // fully dedicated to flying the drone.
-                fakeCursor.style.display = isLocked ? 'block' : 'none';
-            }
-        });
-
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                mouseControlActive = false;
+                inst.style.display = 'flex';
+                e.preventDefault();
+                return;
+            }
             if (e.key.toLowerCase() === 'm') {
                 toggleMotors();
                 return;
@@ -618,15 +603,22 @@
             if (key === 'r') resetDrone();
         });
         document.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
+        
         document.addEventListener('mousemove', (e) => {
-            if (isMobile || document.pointerLockElement !== container) return;
-            mousePitch = -e.movementY * MOUSE_SENSITIVITY;
-            mouseRoll = e.movementX * MOUSE_SENSITIVITY;
+            if (isMobile || !mouseControlActive) return;
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
             
-            rawMouseX += e.movementX * 0.4;
-            rawMouseY += e.movementY * 0.4;
-            rawMouseX = Math.max(-25, Math.min(25, rawMouseX));
-            rawMouseY = Math.max(-25, Math.min(25, rawMouseY));
+            const normX = (e.clientX - centerX) / centerX;
+            const normY = (e.clientY - centerY) / centerY;
+
+            targetMouseRoll = normX * MOUSE_SENSITIVITY_SCALE;
+            targetMousePitch = -normY * MOUSE_SENSITIVITY_SCALE;
+
+            // Position scaled to fit nicely within the 110px stick box bounds (~max 38px offset from center)
+            visualMouseX = THREE.MathUtils.clamp((e.clientX - centerX) * 0.12, -38, 38);
+            visualMouseY = THREE.MathUtils.clamp((e.clientY - centerY) * 0.12, -38, 38);
         });
 
         function updateMobileModeButtonText() {
@@ -727,18 +719,21 @@
         });
         document.getElementById('btn-pause').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!isMobile) document.exitPointerLock();
+            mouseControlActive = false;
             inst.style.display = 'flex';
         });
 
         function resetDrone() {
             drone.position.set(0, 0.3, 45); drone.velocity.set(0, 0, 0); drone.rotation.set(0, 0, 0, 1); drone.euler.set(0, 0, 0);
             currentThrottle = 0; stickyThrottleValue = 0; tumbleRotationVelocity.set(0, 0, 0);
-            isSpawnedSafe = true; rawMouseX = 0; rawMouseY = 0;
+            isSpawnedSafe = true; targetMousePitch = 0; targetMouseRoll = 0; visualMouseX = 0; visualMouseY = 0;
             
             touchLeftValX = 0; 
             touchLeftValY = 1.0; 
             touchRightValX = 0; touchRightValY = 0;
+
+            leftTrailHistory.length = 0;
+            rightTrailHistory.length = 0;
 
             const leftKnob = document.getElementById('touch-left-knob');
             if(leftKnob) leftKnob.style.transform = 'translate(-50%, calc(-50% + 45px))';
@@ -778,6 +773,43 @@
                         }
                     }
                 }
+            }
+        }
+
+        function updateStickTrails(leftBox, rightBox, leftX, leftY, rightX, rightY) {
+            // Remove previous trail DOM elements
+            const oldTrails = leftBox.querySelectorAll('.stick-trail');
+            oldTrails.forEach(t => t.remove());
+            const oldRightTrails = rightBox.querySelectorAll('.stick-trail');
+            oldRightTrails.forEach(t => t.remove());
+
+            // Push current positions to history
+            leftTrailHistory.unshift({ x: leftX, y: leftY });
+            rightTrailHistory.unshift({ x: rightX, y: rightY });
+
+            if (leftTrailHistory.length > MAX_TRAIL_POINTS) leftTrailHistory.pop();
+            if (rightTrailHistory.length > MAX_TRAIL_POINTS) rightTrailHistory.pop();
+
+            // Render left trails
+            for (let i = 1; i < leftTrailHistory.length; i++) {
+                const pt = leftTrailHistory[i];
+                const trailEl = document.createElement('div');
+                trailEl.className = 'stick-trail';
+                trailEl.style.left = `calc(50% + ${pt.x}px)`;
+                trailEl.style.top = `calc(50% + ${pt.y}px)`;
+                trailEl.style.opacity = String(1 - (i / MAX_TRAIL_POINTS));
+                leftBox.appendChild(trailEl);
+            }
+
+            // Render right trails
+            for (let i = 1; i < rightTrailHistory.length; i++) {
+                const pt = rightTrailHistory[i];
+                const trailEl = document.createElement('div');
+                trailEl.className = 'stick-trail';
+                trailEl.style.left = `calc(50% + ${pt.x}px)`;
+                trailEl.style.top = `calc(50% + ${pt.y}px)`;
+                trailEl.style.opacity = String(1 - (i / MAX_TRAIL_POINTS));
+                rightBox.appendChild(trailEl);
             }
         }
 
@@ -821,27 +853,27 @@
                     drone.rotation.multiply(deltaRotation).normalize();
                 }
             } else {
-                if (document.pointerLockElement === container) {
+                if (mouseControlActive) {
                     if (keys.a) inputYaw = -YAW_RATE * dt;
                     if (keys.d) inputYaw = YAW_RATE * dt;
 
                     drone.euler.y -= inputYaw;
 
                     if (modeCfg.hasAutoLevel) {
-                        drone.euler.x = THREE.MathUtils.clamp(drone.euler.x + mousePitch, -modeCfg.maxAngle, modeCfg.maxAngle);
-                        drone.euler.z = THREE.MathUtils.clamp(drone.euler.z - mouseRoll, -modeCfg.maxAngle, modeCfg.maxAngle);
-                        if (Math.abs(mousePitch) < 0.001) drone.euler.x *= Math.exp(-6.0 * dt);
-                        if (Math.abs(mouseRoll) < 0.001) drone.euler.z *= Math.exp(-6.0 * dt);
+                        drone.euler.x = targetMousePitch * modeCfg.maxAngle;
+                        drone.euler.z = -targetMouseRoll * modeCfg.maxAngle;
                         drone.rotation.setFromEuler(drone.euler);
                     } else {
-                        const pitchRate = -mousePitch * 30.0;
-                        const rollRate = -mouseRoll * 30.0;
+                        const pitchRate = targetMousePitch * 15.0;
+                        const rollRate = -targetMouseRoll * 15.0;
                         const deltaRotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitchRate * dt, -inputYaw, rollRate * dt, 'YXZ'));
                         drone.rotation.multiply(deltaRotation).normalize();
                     }
                 } else {
-                    rawMouseX *= Math.exp(-10.0 * dt);
-                    rawMouseY *= Math.exp(-10.0 * dt);
+                    targetMousePitch *= Math.exp(-10.0 * dt);
+                    targetMouseRoll *= Math.exp(-10.0 * dt);
+                    visualMouseX *= Math.exp(-10.0 * dt);
+                    visualMouseY *= Math.exp(-10.0 * dt);
                 }
             }
 
@@ -867,7 +899,6 @@
             drone.velocity.addScaledVector(accel, dt);
             drone.position.addScaledVector(drone.velocity, dt);
 
-            // FIXED LANDING: Snaps cleanly to ground and zeroes vertical velocity/tumble to prevent double jumping/bouncing
             if (drone.position.y <= 0.3) {
                 drone.position.y = 0.3; 
                 drone.velocity.y = 0;
@@ -913,15 +944,15 @@
                 camera.lookAt(drone.position);
             }
 
-            // FIXED CAMERA CRASH: Enforce a minimum camera height floor offset to prevent it from clipping through the terrain
             if (camera.position.y < 0.5) {
                 camera.position.y = 0.5;
             }
 
-            mousePitch = 0; mouseRoll = 0;
-
             const stickLeft = document.getElementById('stick-left');
             const stickRight = document.getElementById('stick-right');
+            const stickBoxLeft = document.getElementById('stick-box-left');
+            const stickBoxRight = document.getElementById('stick-box-right');
+
             let leftY, leftX, rightX, rightY;
 
             if (isMobile) {
@@ -930,17 +961,17 @@
                 rightX = touchRightValX * 35;
                 rightY = touchRightValY * 35;
             } else {
-                leftY = -(stickyThrottleValue * 2 - 1) * 24; 
-                leftX = (keys.d ? 1 : (keys.a ? -1 : 0)) * 24;
-                rawMouseX *= Math.exp(-12.0 * dt);
-                rawMouseY *= Math.exp(-12.0 * dt);
-                rightX = rawMouseX;
-                rightY = rawMouseY;
+                leftY = -(stickyThrottleValue * 2 - 1) * 35; 
+                leftX = (keys.d ? 1 : (keys.a ? -1 : 0)) * 35;
+                rightX = visualMouseX;
+                rightY = visualMouseY;
             }
             stickLeft.style.transform = `translate(calc(-50% + ${leftX}px), calc(-50% + ${leftY}px))`;
             stickRight.style.transform = `translate(calc(-50% + ${rightX}px), calc(-50% + ${rightY}px))`;
 
-            renderer.format = renderer.render(scene, camera);
+            updateStickTrails(stickBoxLeft, stickBoxRight, leftX, leftY, rightX, rightY);
+
+            renderer.render(scene, camera);
         }
 
         animate();
