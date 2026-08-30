@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DJI Virtual Flight</title>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Raffamanch/DJI-Virtual-Fight/main/PNG.ico">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: consolas, sans-serif; position: fixed; }
@@ -96,7 +95,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 6; pointer-events: none; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent;
         }
-        #osd-overlay-canvas { display: block; image-rendering: pixelated; max-width: 100%; max-height: 100%; object-fit: contain; }
+        #osd-overlay-canvas { display: block; image-rendering: pixelated; width: 100%; height: 100%; object-fit: contain; }
 
         #rc-sticks-container {
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
@@ -316,21 +315,36 @@
             }
         });
 
-        // OSD Setup
+        // Built-in Procedural OSD Canvas Rendering (Fixing Missing Image Error)
         const osdCanvas = document.getElementById('osd-overlay-canvas');
-        const oCtx = osdCanvas.getContext('2d', { willReadFrequently: true });
-        const osdImg = new Image();
-        osdImg.src = 'hd.jpeg';
-        let nativeImgWidth = 1280, nativeImgHeight = 720;
+        const oCtx = osdCanvas.getContext('2d');
         function resizeOSD() {
-            if (osdImg.complete && osdImg.naturalWidth) { nativeImgWidth = osdImg.naturalWidth; nativeImgHeight = osdImg.naturalHeight; }
-            osdCanvas.width = nativeImgWidth; osdCanvas.height = nativeImgHeight;
-            if (osdImg.complete) {
-                oCtx.clearRect(0,0,osdCanvas.width,osdCanvas.height);
-                oCtx.drawImage(osdImg,0,0,osdCanvas.width,osdCanvas.height);
-            }
+            osdCanvas.width = window.innerWidth;
+            osdCanvas.height = window.innerHeight;
+            renderProceduralHUD();
         }
-        osdImg.onload = () => resizeOSD();
+        window.addEventListener('resize', resizeOSD);
+
+        function renderProceduralHUD() {
+            oCtx.clearRect(0, 0, osdCanvas.width, osdCanvas.height);
+            oCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            oCtx.font = '14px consolas';
+            
+            // Draw simulated flight telemetry indicators matching DJI style
+            oCtx.fillText("0.0 km/h", 55.0, osdCanvas.height - 65);
+            oCtx.fillText("0.0 km/h", 160.0, osdCanvas.height - 65);
+            oCtx.fillText("H 0.0m", 55.0, osdCanvas.height - 42);
+            oCtx.fillText("B --.-m", 160.0, osdCanvas.height - 42);
+
+            // Flight Mode Icon Box [M]
+            oCtx.fillStyle = 'rgba(20, 25, 35, 0.85)';
+            oCtx.fillRect(15, osdCanvas.height - 95, 32, 32);
+            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            oCtx.strokeRect(15, osdCanvas.height - 95, 32, 32);
+            oCtx.fillStyle = '#fff';
+            oCtx.font = 'bold 16px consolas';
+            oCtx.fillText("M", 25, osdCanvas.height - 73);
+        }
 
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
@@ -349,7 +363,6 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             resizeOSD();
         }
-        window.addEventListener('resize', handleResize);
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.85));
         const skyLight = new THREE.DirectionalLight(0xfffae0, 0.6);
@@ -409,7 +422,7 @@
         scene.add(droneGroup);
 
         const drone = { position: new THREE.Vector3(0, 0.3, 45), velocity: new THREE.Vector3(0, 0, 0), rotation: new THREE.Quaternion(), euler: new THREE.Euler(0, 0, 0, 'YXZ') };
-        let activeMode = 1, isArmed = false;
+        let isArmed = false;
         let keys = { w: false, s: false, a: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
         let throttleInput = 0, yawInput = 0, pitchInput = 0, rollInput = 0;
 
@@ -516,6 +529,7 @@
 
             renderer.render(scene, camera);
         }
+        resizeOSD();
         animate();
     </script>
 </body>
