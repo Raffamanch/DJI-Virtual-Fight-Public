@@ -11,22 +11,28 @@
         #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow: hidden; display: none; }
         canvas { width: 100%; height: 100%; display: block; }
         
-        /* Loading Screen & Intro Overlay */
+        /* Intro Screen */
         #intro-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 50; color: #fff; transition: opacity 0.5s ease;
+            z-index: 50; color: #fff; transition: opacity 0.6s ease; overflow: hidden;
         }
-        .logo-title { font-size: 32px; font-weight: bold; letter-spacing: 2px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        #intro-video {
+            position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%;
+            width: auto; height: auto; transform: translate(-50%, -50%);
+            object-fit: cover; z-index: 1; filter: blur(2px) brightness(0.6); pointer-events: none;
+        }
+        .intro-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+        .logo-title { font-size: 34px; font-weight: bold; letter-spacing: 2px; margin-bottom: 35px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); }
         .ready-btn {
             background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%); color: #111;
-            font-size: 18px; font-weight: bold; padding: 14px 60px; border-radius: 6px; border: none;
-            cursor: pointer; box-shadow: 0 4px 20px rgba(255, 235, 59, 0.4); text-transform: uppercase;
-            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0, rgba(0,0,0,0.05) 10px, transparent 0, transparent 20px);
+            font-size: 18px; font-weight: bold; padding: 15px 65px; border-radius: 6px; border: none;
+            cursor: pointer; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6); text-transform: uppercase;
+            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.04) 0, rgba(0,0,0,0.04) 10px, transparent 0, transparent 20px);
         }
-        .ready-btn:hover { transform: scale(1.03); }
+        .ready-btn:hover { transform: scale(1.04); }
 
-        /* Map Selection Menu Overlay */
+        /* Map Selection Menu */
         #map-menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #1b2838 0%, #0d141f 100%);
@@ -39,7 +45,7 @@
             border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; overflow: hidden; transition: all 0.2s;
         }
         .map-card.selected { border-color: #ffeb3b; background: rgba(255,235,59,0.1); box-shadow: 0 0 20px rgba(255,235,59,0.2); }
-        .map-thumb { width: 100%; height: 140px; background: #333; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #aaa; }
+        .map-thumb { width: 100%; height: 140px; background: #333; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #aaa; }
         .map-info { padding: 15px; display: flex; flex-direction: column; gap: 5px; }
         .map-title { font-size: 16px; font-weight: bold; color: #ffeb3b; }
         .map-desc { font-size: 11px; color: #bbb; line-height: 1.3; }
@@ -49,7 +55,43 @@
         }
         .start-flight-btn:hover { background: #ffeb3b; }
 
-        /* OSD HUD Overlays */
+        /* Exact Pause Menu Overlay */
+        #pause-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
+            z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+        }
+        .pause-back-arrow { position: absolute; top: 30px; left: 40px; font-size: 28px; cursor: pointer; color: #fff; background: none; border: none; }
+        .pause-options { display: flex; gap: 50px; align-items: center; justify-content: center; }
+        .pause-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s, transform 0.2s; }
+        .pause-item:hover { opacity: 1.0; transform: scale(1.05); }
+        .pause-icon-box {
+            width: 70px; height: 70px; border: 2px solid rgba(255,255,255,0.4); border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(255,255,255,0.05);
+        }
+        .pause-label { font-size: 14px; font-weight: 500; letter-spacing: 0.5px; }
+
+        /* Exact Settings Overlay */
+        #settings-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 20, 25, 0.95); backdrop-filter: blur(8px);
+            z-index: 110; display: none; flex-direction: column; padding: 30px 60px; color: #fff;
+        }
+        .settings-header-row { display: flex; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 15px; }
+        .settings-back { font-size: 24px; cursor: pointer; background: none; border: none; color: #fff; margin-right: 30px; }
+        .settings-title { font-size: 20px; font-weight: bold; width: 100%; text-align: center; margin-right: 50px; }
+        .settings-tabs { display: flex; gap: 60px; justify-content: center; margin-bottom: 30px; font-size: 15px; color: #aaa; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .settings-tab.active { color: #fff; font-weight: bold; border-bottom: 2px solid #fff; padding-bottom: 8px; }
+        .settings-body { display: flex; justify-content: space-between; align-items: flex-start; max-width: 900px; margin: 0 auto; width: 100%; }
+        .settings-group { display: flex; flex-direction: column; gap: 20px; flex: 1; }
+        .setting-row { display: flex; flex-direction: column; gap: 8px; }
+        .setting-label { font-size: 13px; color: #ccc; }
+        .segmented-control { display: flex; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px; width: fit-content; }
+        .seg-btn { background: transparent; border: none; color: #fff; padding: 8px 20px; font-size: 13px; cursor: pointer; border-radius: 4px; }
+        .seg-btn.active { background: #fff; color: #000; font-weight: bold; }
+        .preview-box { width: 280px; height: 150px; background: #222; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 12px; }
+
+        /* OSD HUD & Controls */
         #osd-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 6; pointer-events: none; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent;
@@ -62,17 +104,13 @@
         }
         .stick-box {
             width: 85px; height: 85px; background: rgba(0, 0, 0, 0.45);
-            border-radius: 6px; position: relative; overflow: hidden; pointer-events: auto;
+            border-radius: 6px; position: relative; overflow: hidden; pointer-events: auto; touch-action: none;
         }
         .stick-cross-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1.5px; background: rgba(255, 255, 255, 0.3); transform: translateY(-50%); }
         .stick-cross-v { position: absolute; top: 0; left: 50%; width: 1.5px; height: 100%; background: rgba(255, 255, 255, 0.3); transform: translateX(-50%); }
         .stick-ball {
-            position: absolute; width: 15px; height: 15px; background: #ffffff; border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 3;
-        }
-        .stick-trail {
-            position: absolute; width: 13px; height: 13px; background: rgba(135, 206, 250, 0.5); border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
+            position: absolute; width: 18px; height: 18px; background: #ffffff; border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 3; pointer-events: none;
         }
 
         .hud-circle-btn {
@@ -106,98 +144,127 @@
             display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); font-size: 14px;
         }
         .top-btn:hover { background: rgba(40, 50, 70, 0.85); }
-
         #top-menu-bar { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 15px; display: flex; align-items: center; gap: 10px; z-index: 8; pointer-events: auto; }
-        #mobile-mode-btn {
-            color: rgb(255, 235, 59); font-size: 13px; background: rgba(20, 25, 35, 0.85); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,235,59,0.4); cursor: pointer; display: none; font-weight: bold;
-        }
+        #mobile-mode-btn { color: rgb(255, 235, 59); font-size: 13px; background: rgba(20, 25, 35, 0.85); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,235,59,0.4); cursor: pointer; display: none; font-weight: bold; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- Startup Loading Intro Screen -->
+    <!-- Intro Screen -->
     <div id="intro-screen">
-        <div class="logo-title">DJI VIRTUAL FLIGHT</div>
-        <button class="ready-btn" id="ready-go-btn">Ready to Go</button>
+        <video id="intro-video" autoplay muted loop playsinline>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-drone-flying-over-a-rocky-mountain-range-41581-large.mp4" type="video/mp4">
+        </video>
+        <div class="intro-content">
+            <div class="logo-title">DJI VIRTUAL FLIGHT</div>
+            <button class="ready-btn" id="ready-go-btn">Ready to Go</button>
+        </div>
     </div>
 
-    <!-- Map Selection Menu (4 Maps) -->
+    <!-- Map Selection Menu -->
     <div id="map-menu">
         <div class="menu-header">Select Virtual Flight Environment</div>
         <div class="map-grid">
             <div class="map-card selected" onclick="selectMap(0)" id="map-0">
                 <div class="map-thumb">Factory Map</div>
-                <div class="map-info">
-                    <div class="map-title">Factory</div>
-                    <div class="map-desc">Industrial zone with tall chimneys, old warehouses, and tight gaps.</div>
-                </div>
+                <div class="map-info"><div class="map-title">Factory</div><div class="map-desc">Industrial zone with chimneys and tight gaps.</div></div>
             </div>
             <div class="map-card" onclick="selectMap(1)" id="map-1">
                 <div class="map-thumb">Stadium Map</div>
-                <div class="map-info">
-                    <div class="map-title">Stadium</div>
-                    <div class="map-desc">Open racing arena with structured gates and pillars.</div>
-                </div>
+                <div class="map-info"><div class="map-title">Stadium</div><div class="map-desc">Open racing arena with gates and pillars.</div></div>
             </div>
             <div class="map-card" onclick="selectMap(2)" id="map-2">
                 <div class="map-thumb">Parking Map</div>
-                <div class="map-info">
-                    <div class="map-title">Parking</div>
-                    <div class="map-desc">Multi-level concrete structure perfect for tight technical control.</div>
-                </div>
+                <div class="map-info"><div class="map-title">Parking</div><div class="map-desc">Multi-level concrete parking structure.</div></div>
             </div>
             <div class="map-card" onclick="selectMap(3)" id="map-3">
                 <div class="map-thumb">SkyCity Map</div>
-                <div class="map-info">
-                    <div class="map-title">SkyCity</div>
-                    <div class="map-desc">High-rise urban landscape with deep architectural canyons.</div>
-                </div>
+                <div class="map-info"><div class="map-title">SkyCity</div><div class="map-desc">High-rise urban architectural canyon.</div></div>
             </div>
         </div>
         <button class="start-flight-btn" id="start-mission-btn">Enter Flight</button>
     </div>
 
-    <!-- Main Simulator Canvas Container -->
-    <div id="canvas-container">
-        <div id="top-menu-bar">           
-            <div id="mobile-mode-btn">MODE: NORMAL</div>
+    <!-- Pause Menu Overlay -->
+    <div id="pause-menu">
+        <button class="pause-back-arrow" id="pause-resume-btn">&#10094;</button>
+        <div class="pause-options">
+            <div class="pause-item" onclick="openSettings()">
+                <div class="pause-icon-box">&#9881;</div>
+                <div class="pause-label">Settings</div>
+            </div>
+            <div class="pause-item" onclick="goHome()">
+                <div class="pause-icon-box">&#8962;</div>
+                <div class="pause-label">Back to Home</div>
+            </div>
+            <div class="pause-item" onclick="selectLocation()">
+                <div class="pause-icon-box">&#9679;</div>
+                <div class="pause-label">Select Location</div>
+            </div>
+            <div class="pause-item" onclick="tryAgain()">
+                <div class="pause-icon-box">&#8634;</div>
+                <div class="pause-label">Try Again</div>
+            </div>
         </div>
+    </div>
+
+    <!-- Settings Menu Overlay -->
+    <div id="settings-menu">
+        <div class="settings-header-row">
+            <button class="settings-back" onclick="closeSettings()">&#10094;</button>
+            <div class="settings-title">Settings</div>
+        </div>
+        <div class="settings-tabs">
+            <div class="settings-tab active">Display</div>
+            <div class="settings-tab">Audio</div>
+            <div class="settings-tab">Custom Settings</div>
+            <div class="settings-tab">About</div>
+        </div>
+        <div class="settings-body">
+            <div class="settings-group">
+                <div class="setting-row">
+                    <div class="setting-label">Aspect Ratio</div>
+                    <div class="segmented-control">
+                        <button class="seg-btn active">Fullscreen</button>
+                        <button class="seg-btn">16 X 9</button>
+                        <button class="seg-btn">4 X 3</button>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label">Image Quality</div>
+                    <div class="segmented-control">
+                        <button class="seg-btn">Low</button>
+                        <button class="seg-btn">Med</button>
+                        <button class="seg-btn active">High</button>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-box">Preview 60FPS</div>
+        </div>
+    </div>
+
+    <!-- Main Simulator Canvas -->
+    <div id="canvas-container">
+        <div id="top-menu-bar"><div id="mobile-mode-btn">MODE: NORMAL</div></div>
 
         <div id="top-action-bar">
-            <button class="top-btn" id="btn-switch-view" title="Switch View">&#127916;</button>
-            <button class="top-btn" id="btn-retry" title="Reset">&#8634;</button>
             <button class="top-btn" id="btn-pause" title="Pause">&#10074;&#10074;</button>
         </div>
 
-        <div id="osd-container">
-            <canvas id="osd-overlay-canvas"></canvas>
-        </div>
+        <div id="osd-container"><canvas id="osd-overlay-canvas"></canvas></div>
 
         <div id="rc-sticks-container">
             <button id="btn-motor-toggle" class="hud-circle-btn" title="Toggle Motor">&#10074;&#10074;</button>
-            
             <div class="stick-box" id="box-left">
-                <div class="stick-cross-h"></div>
-                <div class="stick-cross-v"></div>
-                <div class="stick-trail" style="opacity: 0.1;"></div>
-                <div class="stick-trail" style="opacity: 0.2;"></div>
-                <div class="stick-trail" style="opacity: 0.35;"></div>
-                <div class="stick-trail" style="opacity: 0.5;"></div>
+                <div class="stick-cross-h"></div><div class="stick-cross-v"></div>
                 <div id="stick-left" class="stick-ball"></div>
             </div>
-
             <div class="stick-box" id="box-right">
-                <div class="stick-cross-h"></div>
-                <div class="stick-cross-v"></div>
-                <div class="stick-trail" style="opacity: 0.1;"></div>
-                <div class="stick-trail" style="opacity: 0.2;"></div>
-                <div class="stick-trail" style="opacity: 0.35;"></div>
-                <div class="stick-trail" style="opacity: 0.5;"></div>
+                <div class="stick-cross-h"></div><div class="stick-cross-v"></div>
                 <div id="stick-right" class="stick-ball"></div>
             </div>
-
-            <button id="btn-fullscreen-toggle" class="hud-circle-btn" title="Lock/Fullscreen">&#128274;</button>
+            <button id="btn-fullscreen-toggle" class="hud-circle-btn" title="Lock">&#128274;</button>
         </div>
 
         <div id="touch-controls">
@@ -213,17 +280,13 @@
         let selectedMapIndex = 0;
         function selectMap(idx) {
             selectedMapIndex = idx;
-            document.querySelectorAll('.map-card').forEach((card, i) => {
-                card.classList.toggle('selected', i === idx);
-            });
+            document.querySelectorAll('.map-card').forEach((card, i) => card.classList.toggle('selected', i === idx));
         }
 
         document.getElementById('ready-go-btn').addEventListener('click', () => {
-            document.getElementById('intro-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('intro-screen').style.display = 'none';
-                document.getElementById('map-menu').style.display = 'flex';
-            }, 500);
+            const intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
+            setTimeout(() => { intro.style.display = 'none'; document.getElementById('map-menu').style.display = 'flex'; }, 600);
         });
 
         document.getElementById('start-mission-btn').addEventListener('click', () => {
@@ -231,47 +294,43 @@
             document.getElementById('canvas-container').style.display = 'block';
             buildSelectedMap(selectedMapIndex);
             handleResize();
-            if (!isMobile) container.requestPointerLock();
         });
 
+        // Pause Menu Controls
+        const pauseMenu = document.getElementById('pause-menu');
+        const settingsMenu = document.getElementById('settings-menu');
+        document.getElementById('btn-pause').addEventListener('click', () => { pauseMenu.style.display = 'flex'; });
+        document.getElementById('pause-resume-btn').addEventListener('click', () => { pauseMenu.style.display = 'none'; });
+        
+        function openSettings() { settingsMenu.style.display = 'flex'; }
+        function closeSettings() { settingsMenu.style.display = 'none'; }
+        function goHome() { location.reload(); }
+        function selectLocation() { pauseMenu.style.display = 'none'; document.getElementById('canvas-container').style.display = 'none'; document.getElementById('map-menu').style.display = 'flex'; }
+        function tryAgain() { pauseMenu.style.display = 'none'; drone.position.set(0, 0.3, 45); drone.velocity.set(0,0,0); }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (settingsMenu.style.display === 'flex') closeSettings();
+                else if (pauseMenu.style.display === 'flex') pauseMenu.style.display = 'none';
+                else pauseMenu.style.display = 'flex';
+            }
+        });
+
+        // OSD Setup
         const osdCanvas = document.getElementById('osd-overlay-canvas');
         const oCtx = osdCanvas.getContext('2d', { willReadFrequently: true });
         const osdImg = new Image();
         osdImg.src = 'hd.jpeg';
         let nativeImgWidth = 1280, nativeImgHeight = 720;
-
         function resizeOSD() {
-            if (osdImg.complete && osdImg.naturalWidth) {
-                nativeImgWidth = osdImg.naturalWidth;
-                nativeImgHeight = osdImg.naturalHeight;
+            if (osdImg.complete && osdImg.naturalWidth) { nativeImgWidth = osdImg.naturalWidth; nativeImgHeight = osdImg.naturalHeight; }
+            osdCanvas.width = nativeImgWidth; osdCanvas.height = nativeImgHeight;
+            if (osdImg.complete) {
+                oCtx.clearRect(0,0,osdCanvas.width,osdCanvas.height);
+                oCtx.drawImage(osdImg,0,0,osdCanvas.width,osdCanvas.height);
             }
-            osdCanvas.width = nativeImgWidth;
-            osdCanvas.height = nativeImgHeight;
-            if (osdImg.complete) renderProcessedOSD();
         }
-
-        function renderProcessedOSD() {
-            oCtx.clearRect(0, 0, osdCanvas.width, osdCanvas.height);
-            oCtx.drawImage(osdImg, 0, 0, osdCanvas.width, osdCanvas.height);
-            const imgData = oCtx.getImageData(0, 0, osdCanvas.width, osdCanvas.height);
-            const data = imgData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                let r = data[i], g = data[i+1], b = data[i+2];
-                if (r < 55 && g < 55 && b < 55) {
-                    data[i+3] = 0;
-                } else {
-                    let brightness = (r + g + b) / 3;
-                    if (brightness > 60) {
-                        data[i] = Math.min(255, r * 1.2);
-                        data[i+1] = Math.min(255, g * 1.2);
-                        data[i+2] = Math.min(255, b * 1.2);
-                        data[i+3] = 255;
-                    } else { data[i+3] = 0; }
-                }
-            }
-            oCtx.putImageData(imgData, 0, 0);
-        }
-        osdImg.onload = () => { resizeOSD(); };
+        osdImg.onload = () => resizeOSD();
 
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
@@ -285,10 +344,9 @@
         container.appendChild(renderer.domElement);
 
         function handleResize() {
-            const width = window.innerWidth, height = window.innerHeight;
-            camera.aspect = width / height;
+            camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            renderer.setSize(window.innerWidth, window.innerHeight);
             resizeOSD();
         }
         window.addEventListener('resize', handleResize);
@@ -298,84 +356,49 @@
         skyLight.position.set(100, 300, 50);
         scene.add(skyLight);
 
-        let obstacles = [];
         let mapObjectsGroup = new THREE.Group();
         scene.add(mapObjectsGroup);
 
         function buildSelectedMap(mapIdx) {
             while(mapObjectsGroup.children.length > 0) { mapObjectsGroup.remove(mapObjectsGroup.children[0]); }
-            obstacles = [];
-
-            // Floor configuration
             const floorGeo = new THREE.PlaneGeometry(5000, 5000);
             floorGeo.rotateX(-Math.PI / 2);
             let floorMat = new THREE.MeshBasicMaterial({ color: 0x6b5b45 });
-            
-            if (mapIdx === 1) floorMat.color.setHex(0x334433); // Stadium Green
-            else if (mapIdx === 2) floorMat.color.setHex(0x444444); // Parking Asphalt
-            else if (mapIdx === 3) floorMat.color.setHex(0x222222); // SkyCity Dark Grid
-            
+            if (mapIdx === 1) floorMat.color.setHex(0x334433);
+            else if (mapIdx === 2) floorMat.color.setHex(0x444444);
+            else if (mapIdx === 3) floorMat.color.setHex(0x222222);
             mapObjectsGroup.add(new THREE.Mesh(floorGeo, floorMat));
 
             if (mapIdx === 0) {
-                // Factory Map (Chimneys & Industrial Ruins)
                 const cliffMat = new THREE.MeshBasicMaterial({ color: 0x4a433b });
                 for (let i = 0; i < 15; i++) {
-                    const cliffW = 80 + Math.random() * 60, cliffH = 40 + Math.random() * 50;
-                    const cliffMesh = new THREE.Mesh(new THREE.BoxGeometry(cliffW, cliffH, 120), cliffMat);
-                    cliffMesh.position.set(-220 + (i * 15), cliffH / 2 - 5, -50 + (i * 35));
+                    const cliffMesh = new THREE.Mesh(new THREE.BoxGeometry(80, 40, 120), cliffMat);
+                    cliffMesh.position.set(-220 + (i * 15), 15, -50 + (i * 35));
                     mapObjectsGroup.add(cliffMesh);
-                    obstacles.push({ minX: cliffMesh.position.x - cliffW/2, maxX: cliffMesh.position.x + cliffW/2, minZ: cliffMesh.position.z - 60, maxZ: cliffMesh.position.z + 60, minY: 0, maxY: cliffH });
                 }
-                const chimneyGroup = new THREE.Group();
-                for (let s = 0; s < 12; s++) {
-                    const segH = 45 / 12, isRed = Math.floor(s / 2) % 2 === 0;
-                    const segMat = new THREE.MeshBasicMaterial({ color: isRed ? 0xcc2222 : 0xdddddd });
-                    const segMesh = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, segH, 16), segMat);
-                    segMesh.position.y = (s * segH) + (segH / 2);
-                    chimneyGroup.add(segMesh);
-                }
-                chimneyGroup.position.set(0, 0, -30);
-                chimneyGroup.rotation.z = -0.15;
-                mapObjectsGroup.add(chimneyGroup);
-                obstacles.push({ minX: -3, maxX: 3, minZ: -33, maxZ: -27, minY: 0, maxY: 45 });
             } else if (mapIdx === 1) {
-                // Stadium Map (Gates and Pillars)
-                const pillarMat = new THREE.MeshBasicMaterial({ color: 0xdddddd });
                 for(let i=0; i<8; i++) {
-                    const p = new THREE.Mesh(new THREE.BoxGeometry(6, 40, 6), pillarMat);
+                    const p = new THREE.Mesh(new THREE.BoxGeometry(6, 40, 6), new THREE.MeshBasicMaterial({ color: 0xdddddd }));
                     p.position.set((i - 3.5) * 40, 20, -50);
                     mapObjectsGroup.add(p);
-                    obstacles.push({ minX: p.position.x - 3, maxX: p.position.x + 3, minZ: -53, maxZ: -47, minY: 0, maxY: 40 });
                 }
             } else if (mapIdx === 2) {
-                // Parking Map (Multi-level slabs)
-                const slabMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
                 for(let l=1; l<=3; l++) {
-                    const slab = new THREE.Mesh(new THREE.BoxGeometry(200, 3, 200), slabMat);
+                    const slab = new THREE.Mesh(new THREE.BoxGeometry(200, 3, 200), new THREE.MeshBasicMaterial({ color: 0x555555 }));
                     slab.position.set(0, l * 15, -60);
                     mapObjectsGroup.add(slab);
-                    obstacles.push({ minX: -100, maxX: 100, minZ: -160, maxZ: 40, minY: l * 15 - 1.5, maxY: l * 15 + 1.5 });
                 }
             } else if (mapIdx === 3) {
-                // SkyCity Map (Skyscrapers)
-                const bMat = new THREE.MeshBasicMaterial({ color: 0x335577 });
                 for(let i=0; i<12; i++) {
-                    const h = 80 + Math.random() * 100;
-                    const b = new THREE.Mesh(new THREE.BoxGeometry(40, h, 40), bMat);
-                    const x = (i % 4 - 1.5) * 90, z = -100 - (Math.floor(i / 4) * 90);
-                    b.position.set(x, h/2, z);
+                    const b = new THREE.Mesh(new THREE.BoxGeometry(40, 100, 40), new THREE.MeshBasicMaterial({ color: 0x335577 }));
+                    b.position.set((i % 4 - 1.5) * 90, 50, -100 - (Math.floor(i / 4) * 90));
                     mapObjectsGroup.add(b);
-                    obstacles.push({ minX: x - 20, maxX: x + 20, minZ: z - 20, maxZ: z + 20, minY: 0, maxY: h });
                 }
             }
         }
 
-        // Drone & Setup
         const droneGroup = new THREE.Group();
-        const bodyMat = new THREE.MeshBasicMaterial({ color: 0x1c1e22 });
-        const orangeAccent = new THREE.MeshBasicMaterial({ color: 0xff6600 });
-        droneGroup.add(new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.35, 1.6), bodyMat));
+        droneGroup.add(new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.35, 1.6), new THREE.MeshBasicMaterial({ color: 0x1c1e22 })));
         const propMeshes = [];
         [{ x: 0.95, z: 0.85 }, { x: -0.95, z: 0.85 }, { x: 0.95, z: -0.85 }, { x: -0.95, z: -0.85 }].forEach(pos => {
             const prop = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.03, 0.18), new THREE.MeshBasicMaterial({ color: 0xcccccc }));
@@ -386,58 +409,97 @@
         scene.add(droneGroup);
 
         const drone = { position: new THREE.Vector3(0, 0.3, 45), velocity: new THREE.Vector3(0, 0, 0), rotation: new THREE.Quaternion(), euler: new THREE.Euler(0, 0, 0, 'YXZ') };
-        const MODES = {
-            1: { name: "NORMAL", maxThrust: 14.0, drag: 0.040, hasAutoLevel: true, maxAngle: 0.5 },
-            2: { name: "SPORT", maxThrust: 21.0, drag: 0.025, hasAutoLevel: true, maxAngle: 0.8 },
-            3: { name: "MANUAL", maxThrust: 25.5, drag: 0.022, hasAutoLevel: false },
-            4: { name: "ACRO", maxThrust: 25.5, drag: 0.009, hasAutoLevel: false }
-        };
-        let activeMode = 1, cameraMode = "FPV", isArmed = false;
-        let keys = { w: false, s: false, a: false, d: false };
-        let mousePitch = 0, mouseRoll = 0, rawMouseX = 0, rawMouseY = 0;
-        let touchLeftValX = 0, touchLeftValY = 1.0, touchRightValX = 0, touchRightValY = 0, stickyThrottleValue = 0.0, currentThrottle = 0;
-        let tumbleRotationVelocity = new THREE.Vector3(0, 0, 0);
+        let activeMode = 1, isArmed = false;
+        let keys = { w: false, s: false, a: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+        let throttleInput = 0, yawInput = 0, pitchInput = 0, rollInput = 0;
 
-        document.getElementById('btn-motor-toggle').addEventListener('click', (e) => { e.stopPropagation(); isArmed = !isArmed; if(!isArmed) currentThrottle = 0; });
-        document.addEventListener('keydown', (e) => {
+        document.getElementById('btn-motor-toggle').addEventListener('click', (e) => {
+            e.stopPropagation(); isArmed = !isArmed; if(!isArmed) throttleInput = 0;
+        });
+
+        window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'm') isArmed = !isArmed;
-            if (['1','2','3','4'].includes(e.key)) { activeMode = parseInt(e.key); document.getElementById('mobile-mode-btn').innerText = `MODE: ${MODES[activeMode].name}`; }
-            if (e.key.toLowerCase() === 'c') cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV";
-            const key = e.key.toLowerCase(); if (key in keys) keys[key] = true;
+            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true;
+            if (e.key === 'ArrowUp') keys.arrowup = true;
+            if (e.key === 'ArrowDown') keys.arrowdown = true;
+            if (e.key === 'ArrowLeft') keys.arrowleft = true;
+            if (e.key === 'ArrowRight') keys.arrowright = true;
         });
-        document.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
-        document.addEventListener('mousemove', (e) => {
-            if (isMobile || document.pointerLockElement !== container) return;
-            mousePitch = -e.movementY * 0.0025; mouseRoll = e.movementX * 0.0025;
-            rawMouseX = Math.max(-28, Math.min(28, rawMouseX + e.movementX * 0.4));
-            rawMouseY = Math.max(-28, Math.min(28, rawMouseY + e.movementY * 0.4));
+        window.addEventListener('keyup', (e) => {
+            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false;
+            if (e.key === 'ArrowUp') keys.arrowup = false;
+            if (e.key === 'ArrowDown') keys.arrowdown = false;
+            if (e.key === 'ArrowLeft') keys.arrowleft = false;
+            if (e.key === 'ArrowRight') keys.arrowright = false;
         });
+
+        // Touch Stick Handling Fix
+        function setupVirtualStick(boxId, knobId, onMove) {
+            const box = document.getElementById(boxId);
+            const knob = document.getElementById(knobId);
+            let active = false;
+            let center = { x: 0, y: 0 };
+
+            function start(e) {
+                active = true;
+                const rect = box.getBoundingClientRect();
+                center.x = rect.left + rect.width / 2;
+                center.y = rect.top + rect.height / 2;
+                move(e);
+            }
+            function move(e) {
+                if (!active) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                let dx = clientX - center.x;
+                let dy = clientY - center.y;
+                const maxR = 30;
+                const dist = Math.hypot(dx, dy);
+                if (dist > maxR) { dx *= maxR / dist; dy *= maxR / dist; }
+                knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                onMove(dx / maxR, -dy / maxR);
+            }
+            function end() {
+                active = false;
+                knob.style.transform = `translate(-50%, -50%)`;
+                onMove(0, 0);
+            }
+
+            box.addEventListener('mousedown', start);
+            window.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            box.addEventListener('touchstart', start);
+            window.addEventListener('touchmove', move);
+            window.addEventListener('touchend', end);
+        }
+
+        let touchThrottle = 0, touchYaw = 0, touchPitch = 0, touchRoll = 0;
+        setupVirtualStick('box-left', 'stick-left', (x, y) => { touchYaw = x; touchThrottle = (y + 1) / 2; });
+        setupVirtualStick('box-right', 'stick-right', (x, y) => { touchRoll = x; touchPitch = y; });
 
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
             let dt = clock.getDelta(); if (dt > 0.1) dt = 0.1;
-            const modeCfg = MODES[activeMode];
 
-            if (isArmed) currentThrottle = stickyThrottleValue; else currentThrottle = 0;
-
-            let inputYaw = 0;
-            if (keys.a) inputYaw = -3.5 * dt;
-            if (keys.d) inputYaw = 3.5 * dt;
-            drone.euler.y -= inputYaw;
-
-            if (modeCfg.hasAutoLevel) {
-                drone.euler.x = THREE.MathUtils.clamp(drone.euler.x + mousePitch, -modeCfg.maxAngle, modeCfg.maxAngle);
-                drone.euler.z = THREE.MathUtils.clamp(drone.euler.z - mouseRoll, -modeCfg.maxAngle, modeCfg.maxAngle);
-                drone.rotation.setFromEuler(drone.euler);
+            if (isArmed) {
+                let kbThrottle = (keys.w ? dt : 0) - (keys.s ? dt : 0);
+                throttleInput = Math.max(0, Math.min(1, touchThrottle || (throttleInput + kbThrottle * 0.5)));
+                yawInput = touchYaw + (keys.arrowright ? 1 : 0) - (keys.arrowleft ? 1 : 0);
+                pitchInput = touchPitch + (keys.arrowup ? 1 : 0) - (keys.arrowdown ? 1 : 0);
+                rollInput = touchRoll + (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
             } else {
-                const deltaRotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-mousePitch * 30.0 * dt, -inputYaw, -mouseRoll * 30.0 * dt, 'YXZ'));
-                drone.rotation.multiply(deltaRotation).normalize();
+                throttleInput = 0; yawInput = 0; pitchInput = 0; rollInput = 0;
             }
 
+            drone.euler.y -= yawInput * 2.0 * dt;
+            drone.euler.x = THREE.MathUtils.clamp(pitchInput * 0.6, -0.6, 0.6);
+            drone.euler.z = THREE.MathUtils.clamp(-rollInput * 0.6, -0.6, 0.6);
+            drone.rotation.setFromEuler(drone.euler);
+
             const localUp = new THREE.Vector3(0, 1, 0).applyQuaternion(drone.rotation);
-            const accel = new THREE.Vector3().addVectors(localUp.multiplyScalar(currentThrottle * modeCfg.maxThrust), new THREE.Vector3(0, -9.81, 0));
-            drone.velocity.addScaledVector(drone.velocity, -modeCfg.drag);
+            const accel = new THREE.Vector3().addVectors(localUp.multiplyScalar(throttleInput * 20.0), new THREE.Vector3(0, -9.81, 0));
+            drone.velocity.addScaledVector(drone.velocity, -0.03);
             drone.velocity.addScaledVector(accel, dt);
             drone.position.addScaledVector(drone.velocity, dt);
 
@@ -445,22 +507,13 @@
 
             droneGroup.position.copy(drone.position);
             droneGroup.quaternion.copy(drone.rotation);
-            if (isArmed && currentThrottle > 0.05) propMeshes.forEach(p => p.rotation.y += 0.55);
+            if (isArmed && throttleInput > 0.05) propMeshes.forEach(p => p.rotation.y += 0.8);
 
-            if (cameraMode === "FPV") {
-                camera.position.copy(drone.position);
-                const camRot = drone.rotation.clone();
-                camRot.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 30 * (Math.PI / 180)));
-                camera.quaternion.copy(camRot);
-                droneGroup.visible = false;
-            } else {
-                droneGroup.visible = true;
-                const backOffset = new THREE.Vector3(0, 2.5, 7.5).applyQuaternion(drone.rotation);
-                camera.position.lerp(new THREE.Vector3().subVectors(drone.position, backOffset), 0.2);
-                camera.lookAt(drone.position);
-            }
+            camera.position.copy(drone.position);
+            const camRot = drone.rotation.clone();
+            camRot.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 25 * (Math.PI / 180)));
+            camera.quaternion.copy(camRot);
 
-            mousePitch = 0; mouseRoll = 0;
             renderer.render(scene, camera);
         }
         animate();
