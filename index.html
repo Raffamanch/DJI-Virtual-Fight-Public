@@ -7,9 +7,10 @@
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Raffamanch/DJI-Virtual-Fight/main/PNG.ico">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #6b5b45; font-family: consolas; position: fixed; }
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow: hidden; }
-        canvas { width: 100%; height: 100%; display: block; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #6b5b45; font-family: consolas, sans-serif; position: fixed; }
+        
+        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; overflow: hidden; }
+        canvas { width: 100% !important; height: 100% !important; display: block; }
         
         #osd-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -17,10 +18,79 @@
         }
         #osd-overlay-canvas { display: block; image-rendering: pixelated; max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: auto; }
 
-        /* Integrated Bottom Layout Container for Sticks & Side Buttons */
+        /* Minecraft / daquavismc Keystrokes Overlay Style */
+        #keystrokes-container {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            z-index: 15;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .ks-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        .ks-key {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: background 0.05s ease, transform 0.05s ease, color 0.05s ease, border-color 0.05s ease;
+        }
+        .ks-key.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #111111;
+            border-color: #ffffff;
+            transform: scale(0.94);
+            text-shadow: none;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+        }
+        .ks-mouse-row .ks-key {
+            width: 78px;
+            height: 48px;
+            font-size: 13px;
+        }
+        .ks-sub {
+            font-size: 10px;
+            margin-top: 2px;
+            opacity: 0.8;
+        }
+        .ks-key.active .ks-sub {
+            color: #222222;
+        }
+        .ks-space {
+            width: 162px;
+            height: 24px;
+        }
+        .ks-space-bar {
+            width: 60px;
+            height: 4px;
+            background: #ffffff;
+            border-radius: 2px;
+            transition: background 0.05s ease;
+        }
+        .ks-key.active .ks-space-bar {
+            background: #111111;
+        }
+
         #rc-sticks-container {
             position: absolute;
-            bottom: 25px;
+            bottom: 55px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -28,6 +98,7 @@
             gap: 12px;
             z-index: 12;
             pointer-events: none;
+            transition: opacity 0.5s ease;
         }
         .stick-box {
             width: 85px;
@@ -55,7 +126,7 @@
             height: 44px;
             background: rgba(20, 25, 35, 0.85);
             color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: none;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -70,47 +141,103 @@
 
         #touch-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 9; pointer-events: none; display: none; }
         .touch-pad {
-            position: absolute; bottom: 20px; width: 130px; height: 130px;
-            background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.15);
+            position: absolute; bottom: max(45px, env(safe-area-inset-bottom)); width: 150px; height: 150px;
+            background: rgba(255, 255, 255, 0.05); border: none;
             border-radius: 50%; pointer-events: auto; touch-action: none;
+            opacity: 0.4;
         }
-        #touch-left-pad { left: 15px; }
-        #touch-right-pad { right: 15px; }
+        #touch-left-pad { left: max(55px, env(safe-area-inset-left)); }
+        #touch-right-pad { right: max(55px, env(safe-area-inset-right)); }
         .touch-knob {
-            position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
-            background: rgba(255, 255, 255, 0.5); border: 2px solid #ffffff; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; width: 55px; height: 55px;
+            background: rgba(255, 255, 255, 0.5); border: none; border-radius: 50%;
             transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         #top-action-bar {
-            position: absolute; top: max(12px, env(safe-area-inset-top)); right: 15px; display: flex; align-items: center; gap: 8px; z-index: 8; pointer-events: auto;
+            position: absolute; top: max(12px, env(safe-area-inset-top)); right: max(15px, env(safe-area-inset-right)); display: flex; align-items: center; gap: 8px; z-index: 8; pointer-events: auto;
+            background: transparent;
         }
         .top-btn {
-            background: rgba(20, 25, 35, 0.75); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent; color: #ffffff; border: none;
             width: 36px; height: 36px; border-radius: 6px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center; box-shadow: none;
             font-size: 14px;
         }
-        .top-btn:hover { background: rgba(40, 50, 70, 0.85); }
+        .top-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
-        #top-menu-bar { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 15px; display: flex; align-items: center; gap: 10px; z-index: 8; pointer-events: auto; }
-        #mobile-mode-btn {
-            color: rgb(255, 235, 59); font-size: 13px; background: rgba(20, 25, 35, 0.85); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,235,59,0.4); cursor: pointer; display: none; font-weight: bold;
+        #top-menu-bar { 
+            position: absolute; top: max(12px, env(safe-area-inset-top)); left: max(15px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 10px; z-index: 8; pointer-events: auto; 
+            background: transparent;
         }
 
-        #instructions { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; z-index: 20; }
-        #menu-content { background: rgba(24, 34, 48, 0.95); padding: 25px 30px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); pointer-events: auto; max-width: 90%; }
-        h1 { margin-bottom: 15px; font-size: 22px; letter-spacing: 1px; color: #ffeb3b; }
-        p { font-size: 14px; color: #eee; }
+        #instructions { 
+            position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(2px);
+            color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; z-index: 20; 
+            transition: opacity 0.4s ease;
+        }
+        #menu-content { 
+            background: rgba(24, 34, 48, 0.85); padding: 30px 40px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); pointer-events: auto; max-width: 90%; 
+            animation: pulseGlow 3s infinite alternate;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 10px rgba(255,235,59,0.1); }
+            100% { box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 25px rgba(255,235,59,0.3); }
+        }
+        h1 { margin-bottom: 12px; font-size: 26px; letter-spacing: 2px; color: #ffeb3b; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        p { font-size: 14px; color: #ddd; line-height: 1.5; }
+        .play-btn-pulse {
+            margin-top: 20px;
+            background: #ffeb3b;
+            color: #111;
+            border: none;
+            padding: 12px 30px;
+            font-weight: bold;
+            font-family: consolas;
+            font-size: 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,235,59,0.4);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .play-btn-pulse:hover {
+            background: #fff176;
+            transform: scale(1.05);
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="canvas-container">
-        <div id="top-menu-bar">           
-            <div id="mobile-mode-btn">MODE: NORMAL</div>
+        <!-- Minecraft YouTube Keystrokes UI -->
+        <div id="keystrokes-container">
+            <div class="ks-row">
+                <div class="ks-key" id="ks-w">W</div>
+            </div>
+            <div class="ks-row">
+                <div class="ks-key" id="ks-a">A</div>
+                <div class="ks-key" id="ks-s">S</div>
+                <div class="ks-key" id="ks-d">D</div>
+            </div>
+            <div class="ks-row ks-mouse-row">
+                <div class="ks-key" id="ks-lmb">
+                    LMB
+                    <span class="ks-sub" id="ks-lmb-cps">0 CPS</span>
+                </div>
+                <div class="ks-key" id="ks-rmb">
+                    RMB
+                    <span class="ks-sub" id="ks-rmb-cps">0 CPS</span>
+                </div>
+            </div>
+            <div class="ks-row">
+                <div class="ks-key ks-space" id="ks-space">
+                    <div class="ks-space-bar"></div>
+                </div>
+            </div>
         </div>
+
+        <div id="top-menu-bar"></div>
 
         <div id="top-action-bar">
             <button class="top-btn" id="btn-switch-view" title="Switch View">&#127916;</button>
@@ -154,9 +281,10 @@
         </div>
 
         <div id="instructions">
-            <div id="menu-content">
-                <h1>DJI VIRTUAL FIGHT</h1>
-                <p id="instruction-text"><b>Ready to Go</b><br><br></p>
+            <div id="menu-content" id="menu-box">
+                <h1 id="menu-title">DJI VIRTUAL FIGHT</h1>
+                <p id="instruction-text"><b>Cinematic World Preview</b><br>Immersive 3D Flight Simulator Experience</p>
+                <button class="play-btn-pulse" id="btn-start-game">CLICK TO PLAY</button>
             </div>
         </div>
     </div>
@@ -166,8 +294,10 @@
 
         if (isMobile) {
             document.getElementById('touch-controls').style.display = 'block';
-            document.getElementById('mobile-mode-btn').style.display = 'block';
-            document.getElementById('instruction-text').innerHTML = `<b>Ready to Go</b><br><br>`;
+            document.getElementById('instruction-text').innerHTML = `<b>Cinematic World Preview</b><br>Landscape Mode Recommended`;
+        } else {
+            document.getElementById('btn-motor-toggle').style.display = 'none';
+            document.getElementById('btn-fullscreen-toggle').style.display = 'none';
         }
 
         const osdCanvas = document.getElementById('osd-overlay-canvas');
@@ -245,7 +375,7 @@
         scene.background = new THREE.Color(0xa4caff);
         scene.fog = new THREE.FogExp2(0xbcd6ff, 0.0018);
 
-        const camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const camera = new THREE.PerspectiveCamera(130, window.innerWidth / window.innerHeight, 0.1, 2000);
         
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -253,17 +383,30 @@
         container.appendChild(renderer.domElement);
 
         function handleResize() {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+            const width = window.innerWidth || document.documentElement.clientWidth;
+            const height = window.innerHeight || document.documentElement.clientHeight;
+            
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            
+            renderer.setSize(width, height, true);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
             resizeOSD();
         }
 
         window.addEventListener('resize', handleResize);
-        window.addEventListener('orientationchange', () => { setTimeout(handleResize, 300); });
+        
+        function triggerDelayedResize() {
+            handleResize();
+            setTimeout(handleResize, 100);
+            setTimeout(handleResize, 300);
+            setTimeout(handleResize, 500);
+        }
+
+        window.addEventListener('orientationchange', triggerDelayedResize);
+        if (screen.orientation && screen.orientation.addEventListener) {
+            screen.orientation.addEventListener('change', triggerDelayedResize);
+        }
         setTimeout(handleResize, 100);
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.85));
@@ -271,7 +414,6 @@
         skyLight.position.set(100, 300, 50);
         scene.add(skyLight);
 
-        // --- REALISTIC ENVIRONMENT & MAP SETUP ---
         const floorCanvas = document.createElement('canvas');
         floorCanvas.width = 512; floorCanvas.height = 512;
         const ctxFloor = floorCanvas.getContext('2d');
@@ -427,9 +569,12 @@
         let activeMode = 1;
         let cameraMode = "FPV";
         let isArmed = false;
+        let gameStarted = false;
+        let cinematicTime = 0;
+        let cinematicSlowdownFactor = 1.0;
         let tumbleRotationVelocity = new THREE.Vector3(0, 0, 0);
 
-        let keys = { w: false, s: false, a: false, d: false };
+        let keys = { w: false, s: false, a: false, d: false, ' ': false };
         let mousePitch = 0, mouseRoll = 0;
         let rawMouseX = 0, rawMouseY = 0;
 
@@ -443,6 +588,46 @@
         const GRAVITY = 9.81;
         const CAMERA_UPTILT = 30 * (Math.PI / 180);
         let currentThrottle = 0;
+
+        // Keystrokes & CPS Tracking
+        const ksElements = {
+            w: document.getElementById('ks-w'),
+            a: document.getElementById('ks-a'),
+            s: document.getElementById('ks-s'),
+            d: document.getElementById('ks-d'),
+            space: document.getElementById('ks-space'),
+            lmb: document.getElementById('ks-lmb'),
+            rmb: document.getElementById('ks-rmb')
+        };
+
+        let lmbClicks = [];
+        let rmbClicks = [];
+
+        function updateCPS() {
+            const now = Date.now();
+            lmbClicks = lmbClicks.filter(t => now - t < 1000);
+            rmbClicks = rmbClicks.filter(t => now - t < 1000);
+            document.getElementById('ks-lmb-cps').innerText = `${lmbClicks.length} CPS`;
+            document.getElementById('ks-rmb-cps').innerText = `${rmbClicks.length} CPS`;
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                ksElements.lmb.classList.add('active');
+                lmbClicks.push(Date.now());
+            } else if (e.button === 2) {
+                ksElements.rmb.classList.add('active');
+                rmbClicks.push(Date.now());
+            }
+            updateCPS();
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 0) ksElements.lmb.classList.remove('active');
+            if (e.button === 2) ksElements.rmb.classList.remove('active');
+        });
+
+        window.addEventListener('contextmenu', (e) => e.preventDefault());
 
         const motorBtn = document.getElementById('btn-motor-toggle');
         function toggleMotors() {
@@ -472,42 +657,80 @@
 
         function cycleFlightMode() {
             activeMode = (activeMode % 3) + 1;
-            updateMobileModeButtonText();
         }
 
-        // Tap on screen / OSD container to change mode seamlessly
         document.getElementById('osd-container').addEventListener('click', (e) => {
             e.stopPropagation();
-            cycleFlightMode();
+            if (gameStarted) cycleFlightMode();
         });
 
         function startGameSession() {
-            handleResize();
-            inst.style.display = 'none';
-            if (!isMobile) container.requestPointerLock();
+            if (!gameStarted) {
+                gameStarted = true;
+                document.getElementById('menu-title').innerText = "DJI VIRTUAL FIGHT";
+                document.getElementById('instruction-text').innerHTML = `<b>Ready to Fly</b><br>Use mouse to look, W/S throttle, A/D yaw`;
+                document.getElementById('btn-start-game').innerText = "RESUME / LOCK CURSOR";
+            }
+            
+            inst.style.opacity = '0';
+            setTimeout(() => { inst.style.display = 'none'; }, 400);
+            
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+
+            if (!isMobile) {
+                container.requestPointerLock();
+            }
+            
+            triggerDelayedResize();
         }
-        container.addEventListener('click', startGameSession);
-        inst.addEventListener('click', startGameSession);
+
+        document.getElementById('btn-start-game').addEventListener('click', (e) => {
+            e.stopPropagation();
+            startGameSession();
+        });
+
+        inst.addEventListener('click', (e) => {
+            startGameSession();
+        });
 
         document.addEventListener('pointerlockchange', () => { 
-            if (!isMobile) {
+            if (!isMobile && gameStarted) {
                 const isLocked = (document.pointerLockElement === container);
-                inst.style.display = isLocked ? 'none' : 'flex';
-                if (!isLocked) { rawMouseX = 0; rawMouseY = 0; }
+                if (!isLocked) {
+                    inst.style.display = 'flex';
+                    inst.style.opacity = '1';
+                    rawMouseX = 0; 
+                    rawMouseY = 0;
+                }
             }
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'm') { toggleMotors(); return; }
-            if (['1','2','3'].includes(e.key)) { activeMode = parseInt(e.key); updateMobileModeButtonText(); return; }
-            if (e.key.toLowerCase() === 'c') { cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV"; return; }
-            const key = e.key.toLowerCase();
-            if (key in keys) keys[key] = true;
-            if (key === 'r') resetDrone();
+            const k = e.key.toLowerCase();
+            if (k in ksElements) ksElements[k].classList.add('active');
+            if (k === ' ') ksElements.space.classList.add('active');
+
+            if (!gameStarted) return;
+            if (k === 'm') { toggleMotors(); return; }
+            if (['1','2','3'].includes(k)) { activeMode = parseInt(k); return; }
+            if (k === 'c') { cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV"; return; }
+            if (k in keys) keys[k] = true;
+            if (k === 'r') resetDrone();
         });
-        document.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
+
+        document.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (k in ksElements) ksElements[k].classList.remove('active');
+            if (k === ' ') ksElements.space.classList.remove('active');
+
+            if (!gameStarted) return;
+            if (k in keys) keys[k] = false;
+        });
+
         document.addEventListener('mousemove', (e) => {
-            if (isMobile || document.pointerLockElement !== container) return;
+            if (!gameStarted || isMobile || document.pointerLockElement !== container) return;
             mousePitch = -e.movementY * MOUSE_SENSITIVITY;
             mouseRoll = e.movementX * MOUSE_SENSITIVITY;
             rawMouseX += e.movementX * 0.4;
@@ -516,19 +739,10 @@
             rawMouseY = Math.max(-28, Math.min(28, rawMouseY));
         });
 
-        function updateMobileModeButtonText() {
-            const btn = document.getElementById('mobile-mode-btn');
-            if (btn) btn.innerText = `MODE: ${MODES[activeMode].name}`;
-        }
-        document.getElementById('mobile-mode-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            cycleFlightMode();
-        });
-
         function setupTouchJoystick(padId, knobId, callback, isStickyY = false) {
             const pad = document.getElementById(padId);
             const knob = document.getElementById(knobId);
-            const maxDist = 45;
+            const maxDist = 47.5;
             let activeTouchId = null;
 
             pad.addEventListener('touchstart', (e) => {
@@ -556,6 +770,8 @@
                             knob.style.transform = `translate(-50%, -50%)`;
                             callback(0, 0);
                         } else {
+                            const currentDy = parseFloat(knob.dataset.dy || 47.5);
+                            knob.style.transform = `translate(-50%, calc(-50% + ${currentDy}px))`;
                             callback(0, null);
                         }
                     }
@@ -570,6 +786,11 @@
                 let dy = touch.clientY - (rect.top + rect.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist > maxDist) { dx = (dx / dist) * maxDist; dy = (dy / dist) * maxDist; }
+                
+                if (isStickyY) {
+                    knob.dataset.dy = dy;
+                }
+
                 knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
                 callback(dx / maxDist, dy / maxDist);
             }
@@ -577,17 +798,27 @@
 
         if (isMobile) {
             const leftKnob = document.getElementById('touch-left-knob');
-            if (leftKnob) leftKnob.style.transform = `translate(-50%, calc(-50% + 45px))`;
-            setupTouchJoystick('touch-left-pad', 'touch-left-knob', (x, y) => { touchLeftValX = x; if (y !== null) touchLeftValY = y; }, true);
-            setupTouchJoystick('touch-right-pad', 'touch-right-knob', (x, y) => { touchRightValX = x; touchRightValY = y; }, false);
+            if (leftKnob) {
+                leftKnob.style.transform = `translate(-50%, calc(-50% + 47.5px))`;
+                leftKnob.dataset.dy = 47.5;
+            }
+            setupTouchJoystick('touch-left-pad', 'touch-left-knob', (x, y) => { 
+                touchLeftValX = x; 
+                if (y !== null) touchLeftValY = y; 
+            }, true);
+            setupTouchJoystick('touch-right-pad', 'touch-right-knob', (x, y) => { 
+                touchRightValX = x; 
+                touchRightValY = y; 
+            }, false);
         }
 
-        document.getElementById('btn-switch-view').addEventListener('click', (e) => { e.stopPropagation(); cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV"; });
+        document.getElementById('btn-switch-view').addEventListener('click', (e) => { e.stopPropagation(); if(gameStarted) cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV"; });
         document.getElementById('btn-retry').addEventListener('click', (e) => { e.stopPropagation(); resetDrone(); });
         document.getElementById('btn-pause').addEventListener('click', (e) => {
             e.stopPropagation();
             if (!isMobile) document.exitPointerLock();
             inst.style.display = 'flex';
+            inst.style.opacity = '1';
         });
 
         function resetDrone() {
@@ -596,10 +827,13 @@
             rawMouseX = 0; rawMouseY = 0; touchLeftValX = 0; touchLeftValY = 1.0; touchRightValX = 0; touchRightValY = 0;
 
             const leftKnob = document.getElementById('touch-left-knob');
-            if(leftKnob) leftKnob.style.transform = 'translate(-50%, calc(-50% + 45px))';
+            if(leftKnob) {
+                leftKnob.style.transform = 'translate(-50%, calc(-50% + 47.5px))';
+                leftKnob.dataset.dy = 47.5;
+            }
             const rightKnob = document.getElementById('touch-right-knob');
             if(rightKnob) rightKnob.style.transform = 'translate(-50%, -50%)';
-            handleResize();
+            triggerDelayedResize();
         }
 
         function handleCollisions() {
@@ -638,8 +872,32 @@
 
         function animate() {
             requestAnimationFrame(animate);
+            updateCPS();
             let dt = clock.getDelta(); if (dt > 0.1) dt = 0.1;
             const modeCfg = MODES[activeMode];
+
+            if (!gameStarted) {
+                cinematicTime += dt * 0.5;
+                cinematicSlowdownFactor = Math.max(0.08, cinematicSlowdownFactor - 0.01 * dt);
+                
+                const radius = 60;
+                const camX = Math.cos(cinematicTime) * radius;
+                const camZ = Math.sin(cinematicTime) * radius + 10;
+                const camY = 25 + Math.sin(cinematicTime * 0.5) * 15;
+                
+                camera.position.set(camX, camY, camZ);
+                camera.lookAt(0, 15, -20);
+
+                propMeshes.forEach(prop => { prop.rotation.y += 0.15; });
+
+                cloudGroup.children.forEach(c => {
+                    c.position.x += 1.5 * dt * 0.3;
+                    if(c.position.x > 600) c.position.x = -600;
+                });
+
+                renderer.render(scene, camera);
+                return;
+            }
 
             let inputYaw = 0, targetPitch = 0, targetRoll = 0;
 
@@ -658,8 +916,8 @@
 
             if (isMobile) {
                 inputYaw = touchLeftValX * YAW_RATE * dt;
-                targetPitch = -touchRightValY * (modeCfg.hasAutoLevel ? modeCfg.maxAngle : 2.5);
-                targetRoll = touchRightValX * (modeCfg.hasAutoLevel ? modeCfg.maxAngle : 2.5);
+                targetPitch = touchRightValY * (modeCfg.hasAutoLevel ? modeCfg.maxAngle : 2.5);
+                targetRoll = -touchRightValX * (modeCfg.hasAutoLevel ? modeCfg.maxAngle : 2.5);
 
                 drone.euler.y -= inputYaw;
                 if (modeCfg.hasAutoLevel) {
