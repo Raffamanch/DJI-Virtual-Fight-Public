@@ -88,6 +88,13 @@
             background: #111111;
         }
 
+        /* Hide Keystrokes on Mobile / Small Screens & Touch Devices */
+        @media (max-width: 768px), (pointer: coarse) {
+            #keystrokes-container {
+                display: none !important;
+            }
+        }
+
         #rc-sticks-container {
             position: absolute;
             bottom: 55px;
@@ -295,6 +302,10 @@
         if (isMobile) {
             document.getElementById('touch-controls').style.display = 'block';
             document.getElementById('instruction-text').innerHTML = `<b>Cinematic World Preview</b><br>Landscape Mode Recommended`;
+            
+            // Programmatically hide keystrokes on mobile as well
+            const ksContainer = document.getElementById('keystrokes-container');
+            if (ksContainer) ksContainer.style.display = 'none';
         } else {
             document.getElementById('btn-motor-toggle').style.display = 'none';
             document.getElementById('btn-fullscreen-toggle').style.display = 'none';
@@ -604,6 +615,7 @@
         let rmbClicks = [];
 
         function updateCPS() {
+            if (isMobile) return;
             const now = Date.now();
             lmbClicks = lmbClicks.filter(t => now - t < 1000);
             rmbClicks = rmbClicks.filter(t => now - t < 1000);
@@ -612,6 +624,7 @@
         }
 
         window.addEventListener('mousedown', (e) => {
+            if (isMobile) return;
             if (e.button === 0) {
                 ksElements.lmb.classList.add('active');
                 lmbClicks.push(Date.now());
@@ -623,6 +636,7 @@
         });
 
         window.addEventListener('mouseup', (e) => {
+            if (isMobile) return;
             if (e.button === 0) ksElements.lmb.classList.remove('active');
             if (e.button === 2) ksElements.rmb.classList.remove('active');
         });
@@ -709,8 +723,10 @@
 
         document.addEventListener('keydown', (e) => {
             const k = e.key.toLowerCase();
-            if (k in ksElements) ksElements[k].classList.add('active');
-            if (k === ' ') ksElements.space.classList.add('active');
+            if (!isMobile) {
+                if (k in ksElements) ksElements[k].classList.add('active');
+                if (k === ' ') ksElements.space.classList.add('active');
+            }
 
             if (!gameStarted) return;
             if (k === 'm') { toggleMotors(); return; }
@@ -722,8 +738,10 @@
 
         document.addEventListener('keyup', (e) => {
             const k = e.key.toLowerCase();
-            if (k in ksElements) ksElements[k].classList.remove('active');
-            if (k === ' ') ksElements.space.classList.remove('active');
+            if (!isMobile) {
+                if (k in ksElements) ksElements[k].classList.remove('active');
+                if (k === ' ') ksElements.space.classList.remove('active');
+            }
 
             if (!gameStarted) return;
             if (k in keys) keys[k] = false;
